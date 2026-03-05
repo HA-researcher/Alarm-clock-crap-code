@@ -50,12 +50,12 @@ export default function HomePage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Challenge Configuration */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-green-400 mb-4">Challenge Configuration</h2>
+              <h2 className="text-lg font-semibold text-green-400 mb-4">チャレンジ設定</h2>
               
               {/* プログラミング言語 */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Programming Language
+                  プログラミング言語
                 </label>
                 <select
                   value={selectedLanguage}
@@ -73,7 +73,7 @@ export default function HomePage() {
               {/* 難易度 */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Difficulty Level
+                  難易度
                 </label>
                 <select
                   value={difficulty}
@@ -92,12 +92,12 @@ export default function HomePage() {
               {difficulty === "custom" && (
                 <div className="mb-4 animate-in">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Custom Challenge
+                    カスタム問題
                   </label>
                   <textarea
                     value={customProblem}
                     onChange={(e) => setCustomProblem(e.target.value)}
-                    placeholder="Describe your custom challenge..."
+                    placeholder="ここに問題を入力してください..."
                     className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 h-24 resize-none placeholder-gray-400"
                   />
                 </div>
@@ -106,12 +106,12 @@ export default function HomePage() {
 
             {/* Alarm Schedule */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-green-400 mb-4">Alarm Schedule</h2>
+              <h2 className="text-lg font-semibold text-green-400 mb-4">アラーム設定</h2>
               
               {/* 起床時刻 */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Wake-up Time
+                  起床時刻
                 </label>
                 <input
                   type="time"
@@ -124,7 +124,7 @@ export default function HomePage() {
               {/* 音量 */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Alarm Volume: {volume}%
+                  アラーム音量: {volume}%
                 </label>
                 <div className="flex items-center space-x-3">
                   <input
@@ -142,7 +142,7 @@ export default function HomePage() {
               <div className="mb-4">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-gray-300">
-                    Sleep Detection (PC Only)
+                    二度寝検知 (PCのみ)
                   </label>
                   <button
                     type="button"
@@ -159,7 +159,7 @@ export default function HomePage() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
-                  Use camera to detect sleep and prevent snoozing
+                  カメラで顔を検知し、二度寝を防ぎます
                 </p>
               </div>
 
@@ -167,10 +167,10 @@ export default function HomePage() {
               {enableMonitoring && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Camera Preview
+                    カメラプレビュー
                   </label>
-                  <div className="w-full h-32 border-2 border-dashed border-gray-600 rounded-md flex items-center justify-center bg-gray-700/50">
-                    <p className="text-gray-400 text-sm">Camera preview area</p>
+                  <div className="w-full aspect-video border-2 border-dashed border-gray-600 rounded-md flex items-center justify-center bg-gray-700/50">
+                    <p className="text-gray-400 text-sm">カメラプレビュー表示領域</p>
                   </div>
                 </div>
               )}
@@ -181,12 +181,12 @@ export default function HomePage() {
           <div className="space-y-6">
             {/* Mobile Connection */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-green-400 mb-4">Mobile Connection</h2>
+              <h2 className="text-lg font-semibold text-green-400 mb-4">モバイル連携</h2>
               
               {/* QRコード領域 */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  QR Code
+                  QRコード
                 </label>
                 <div className="w-full h-48 border-2 border-dashed border-gray-600 rounded-md flex items-center justify-center bg-gray-700/50">
                   <div className="text-center">
@@ -204,7 +204,7 @@ export default function HomePage() {
                         d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
                       />
                     </svg>
-                    <p className="text-gray-400 text-sm">QR Code will appear here</p>
+                    <p className="text-gray-400 text-sm">QRコードがここに表示されます</p>
                   </div>
                 </div>
               </div>
@@ -212,7 +212,7 @@ export default function HomePage() {
               {/* 合言葉 */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Pairing Code
+                  合言葉
                 </label>
                 <div className="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-center">
                   <span className="text-green-400 font-mono text-lg">ABC123</span>
@@ -222,17 +222,17 @@ export default function HomePage() {
 
             {/* 状態表示 */}
             <div className="bg-gray-800 rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-green-400 mb-4">Status</h2>
+              <h2 className="text-lg font-semibold text-green-400 mb-4">ステータス</h2>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-300">Current State:</span>
+                  <span className="text-sm text-gray-300">現在の状態:</span>
                   <span className="text-sm font-medium text-green-400">{state}</span>
                 </div>
                 
                 {state === "cleared" && (
                   <div className="mt-3 p-3 bg-green-900/50 border border-green-700 rounded-md">
                     <p className="text-sm text-green-300">
-                      ✅ Challenge cleared. Ready for next alarm.
+                      ✅ チャレンジクリア。次のアラームを設定できます。
                     </p>
                   </div>
                 )}
@@ -249,7 +249,7 @@ export default function HomePage() {
               onClick={startWaiting}
               className="bg-green-600 hover:bg-green-700 text-white py-3 px-8 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
             >
-              Save Alarm Configuration
+              アラーム設定を保存
             </button>
             
             <button
@@ -257,7 +257,7 @@ export default function HomePage() {
               onClick={reset}
               className="border border-gray-600 hover:bg-gray-800 py-3 px-6 rounded-lg transition-colors text-gray-300"
             >
-              Reset
+              リセット
             </button>
           </div>
         </div>
