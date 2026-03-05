@@ -17,10 +17,10 @@ export const PROGRAMMING_LANGUAGES = [
 ] as const;
 
 export const DIFFICULTY_LEVELS = [
-  { value: "easy", label: "かんたん", description: "朝でも解ける優しい問題" },
-  { value: "medium", label: "ふつう", description: "適度に頭を使う問題" },
-  { value: "hard", label: "むずかしい", description: "本気で考えないと解けない問題" },
-  { value: "custom", label: "カスタム", description: "自分で問題を用意" },
+  { value: "easy", label: "Easy", description: "Simple problems for morning coding" },
+  { value: "medium", label: "Medium", description: "Moderately challenging problems" },
+  { value: "hard", label: "Hard", description: "Problems that require serious thought" },
+  { value: "custom", label: "Custom", description: "Create your own challenge" },
 ] as const;
 
 export type ProgrammingLanguage = typeof PROGRAMMING_LANGUAGES[number]["value"];

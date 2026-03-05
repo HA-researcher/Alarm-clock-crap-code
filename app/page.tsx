@@ -42,273 +42,240 @@ export default function HomePage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-12 px-6 py-16 bg-green-900">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-green-400 mb-2 flex items-center justify-center">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-            className="w-9 h-9 mr-2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          目覚まし設定
-        </h1>
-        <p className="text-sm text-green-200">
-          起床時刻とプログラミング課題を設定してください
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-900">
+      {/* メインコンテンツ */}
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* 左側: アラーム設定 */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Challenge Configuration */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-green-400 mb-4">Challenge Configuration</h2>
+              
+              {/* プログラミング言語 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Programming Language
+                </label>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => setSelectedLanguage(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  {PROGRAMMING_LANGUAGES.map((lang) => (
+                    <option key={lang.value} value={lang.value} className="bg-gray-700">
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-      {/* 設定カード */}
-      <div className="w-full max-w-md bg-green-800 rounded-lg shadow-lg p-8 space-y-8">
-        {/* 時刻設定 */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-green-200 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5 mr-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            起床時刻
-          </label>
-          <input
-            type="time"
-            value={alarmTime}
-            onChange={(e) => setAlarmTime(e.target.value)}
-            className="w-full px-3 py-2 bg-green-700 text-green-100 border border-green-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          />
-        </div>
+              {/* 難易度 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Difficulty Level
+                </label>
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  {DIFFICULTY_LEVELS.map((level) => (
+                    <option key={level.value} value={level.value} className="bg-gray-700">
+                      {level.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        {/* アラーム音量 */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-green-200 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5 mr-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15.536a5 5 0 001.414 1.414m2.828-9.9a9 9 0 0112.728 0"
-              />
-            </svg>
-            アラーム音量: {volume}%
-          </label>
-          <div className="flex items-center space-x-3">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={volume}
-              onChange={(e) => setVolume(Number(e.target.value))}
-              className="flex-1 h-2 bg-green-700 rounded-lg appearance-none cursor-pointer slider"
-            />
+              {/* カスタム問題 */}
+              {difficulty === "custom" && (
+                <div className="mb-4 animate-in">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Custom Challenge
+                  </label>
+                  <textarea
+                    value={customProblem}
+                    onChange={(e) => setCustomProblem(e.target.value)}
+                    placeholder="Describe your custom challenge..."
+                    className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 h-24 resize-none placeholder-gray-400"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Alarm Schedule */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-green-400 mb-4">Alarm Schedule</h2>
+              
+              {/* 起床時刻 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Wake-up Time
+                </label>
+                <input
+                  type="time"
+                  value={alarmTime}
+                  onChange={(e) => setAlarmTime(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+
+              {/* 音量 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Alarm Volume: {volume}%
+                </label>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volume}
+                    onChange={(e) => setVolume(Number(e.target.value))}
+                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                </div>
+              </div>
+
+              {/* 二度寝検知 */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-300">
+                    Sleep Detection (PC Only)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setEnableMonitoring(!enableMonitoring)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      enableMonitoring ? "bg-green-600" : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        enableMonitoring ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Use camera to detect sleep and prevent snoozing
+                </p>
+              </div>
+
+              {/* カメラプレビュー */}
+              {enableMonitoring && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Camera Preview
+                  </label>
+                  <div className="w-full h-32 border-2 border-dashed border-gray-600 rounded-md flex items-center justify-center bg-gray-700/50">
+                    <p className="text-gray-400 text-sm">Camera preview area</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 右側: モバイル連携 */}
+          <div className="space-y-6">
+            {/* Mobile Connection */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-green-400 mb-4">Mobile Connection</h2>
+              
+              {/* QRコード領域 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  QR Code
+                </label>
+                <div className="w-full h-48 border-2 border-dashed border-gray-600 rounded-md flex items-center justify-center bg-gray-700/50">
+                  <div className="text-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      className="w-12 h-12 mx-auto mb-2 text-gray-400"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
+                      />
+                    </svg>
+                    <p className="text-gray-400 text-sm">QR Code will appear here</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 合言葉 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Pairing Code
+                </label>
+                <div className="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-center">
+                  <span className="text-green-400 font-mono text-lg">ABC123</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 状態表示 */}
+            <div className="bg-gray-800 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-green-400 mb-4">Status</h2>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-300">Current State:</span>
+                  <span className="text-sm font-medium text-green-400">{state}</span>
+                </div>
+                
+                {state === "cleared" && (
+                  <div className="mt-3 p-3 bg-green-900/50 border border-green-700 rounded-md">
+                    <p className="text-sm text-green-300">
+                      ✅ Challenge cleared. Ready for next alarm.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* 言語選択 */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-green-200 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5 mr-2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-              />
-            </svg>
-            プログラミング言語
-          </label>
-          <select
-            value={selectedLanguage}
-            onChange={(e) => setSelectedLanguage(e.target.value)}
-            className="w-full px-3 py-2 bg-green-700 text-green-100 border border-green-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            {PROGRAMMING_LANGUAGES.map((lang) => (
-              <option key={lang.value} value={lang.value} className="bg-green-700">
-                {lang.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* 難易度選択 */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-green-200">
-            難易度
-          </label>
-          <select
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-            className="w-full px-3 py-2 bg-green-700 text-green-100 border border-green-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-          >
-            <option value="easy" className="bg-green-700">初級</option>
-            <option value="medium" className="bg-green-700">中級</option>
-            <option value="hard" className="bg-green-700">上級</option>
-            <option value="custom" className="bg-green-700">カスタム</option>
-          </select>
-        </div>
-
-        {/* カスタム問題（難易度がcustomの時のみ表示） */}
-        {difficulty === "custom" && (
-          <div className="space-y-3 animate-in">
-            <label className="block text-sm font-medium text-green-200">
-              📝 カスタム問題
-            </label>
-            <textarea
-              value={customProblem}
-              onChange={(e) => setCustomProblem(e.target.value)}
-              placeholder="ここに問題を入力してください..."
-              className="w-full px-3 py-2 bg-green-700 text-green-100 border border-green-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 h-24 resize-none placeholder-green-300"
-            />
-          </div>
-        )}
-
-        {/* 二度寝検知設定 */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-green-200 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-5 h-5 mr-2"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-              二度寝検知 (PCのみ)
-            </label>
+        {/* 操作ボタン */}
+        <div className="mt-8 flex justify-center">
+          <div className="flex gap-4">
             <button
               type="button"
-              onClick={() => setEnableMonitoring(!enableMonitoring)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                enableMonitoring ? "bg-green-600" : "bg-gray-600"
-              }`}
+              onClick={startWaiting}
+              className="bg-green-600 hover:bg-green-700 text-white py-3 px-8 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
             >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  enableMonitoring ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
+              Save Alarm Configuration
+            </button>
+            
+            <button
+              type="button"
+              onClick={reset}
+              className="border border-gray-600 hover:bg-gray-800 py-3 px-6 rounded-lg transition-colors text-gray-300"
+            >
+              Reset
             </button>
           </div>
-          <p className="text-xs text-green-300">
-            カメラで顔を検知し、二度寝を防ぎます
-          </p>
         </div>
 
-        {/* カメラプレビュー */}
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-green-200 flex items-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-5 h-5 mr-2"
+        {/* デバッグ用 */}
+        {isDev && (
+          <div className="mt-8 rounded border border-gray-700 bg-gray-800 px-4 py-3 text-sm max-w-md mx-auto">
+            <p className="mb-2 font-semibold text-gray-300">🔧 DEV ONLY</p>
+            <button
+              type="button"
+              onClick={debugJumpToChallenge}
+              className="w-full rounded border border-gray-600 px-3 py-1 hover:bg-gray-700 text-gray-300"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-            </svg>
-            カメラプレビュー
-          </label>
-          <div className="w-full h-32 border-2 border-dashed border-green-600 rounded-md flex items-center justify-center bg-green-700/50">
-            <p className="text-green-300 text-sm">カメラプレビュー表示領域</p>
+              Jump to /challenge (alarming)
+            </button>
           </div>
-        </div>
-      </div>
-
-      {/* 状態表示 */}
-      <div className="text-center">
-        <p className="text-sm text-green-200 mb-4">
-          現在の状態: <span className="font-semibold">{state}</span>
-        </p>
-        
-        {state === "cleared" && (
-          <p className="rounded border border-green-500/50 bg-green-500/10 px-4 py-2 text-sm mb-4 text-green-300">
-            ✅ Challenge cleared. 次の目覚ましを開始できます。
-          </p>
         )}
       </div>
-
-      {/* 操作ボタン */}
-      <div className="flex flex-col gap-4 w-full max-w-md">
-        <button
-          type="button"
-          onClick={startWaiting}
-          className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg"
-        >
-          🚀 アラーム開始
-        </button>
-        
-        <button
-          type="button"
-          onClick={reset}
-          className="w-full border border-green-600 py-2 px-4 rounded-lg hover:bg-green-800 transition-colors text-green-200"
-        >
-          リセット
-        </button>
-      </div>
-
-      {/* デバッグ用 */}
-      {isDev && (
-        <div className="rounded border border-green-500/60 bg-green-700/50 px-4 py-3 text-sm w-full max-w-md">
-          <p className="mb-2 font-semibold text-green-200">🔧 DEV ONLY</p>
-          <button
-            type="button"
-            onClick={debugJumpToChallenge}
-            className="w-full rounded border border-green-400 px-3 py-1 hover:bg-green-600 text-green-100"
-          >
-            Jump to /challenge (alarming)
-          </button>
-        </div>
-      )}
-    </main>
+    </div>
   );
 }

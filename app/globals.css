@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #064e3b;
-  --foreground: #d1fae5;
+  --background: #111827;
+  --foreground: #d1d5db;
 }
 
 @theme inline {
@@ -14,8 +14,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #064e3b;
-    --foreground: #d1fae5;
+    --background: #111827;
+    --foreground: #d1d5db;
   }
 }
 
@@ -45,7 +45,7 @@ body {
   appearance: none;
   width: 16px;
   height: 16px;
-  background: white;
+  background: #10b981;
   border-radius: 50%;
   cursor: pointer;
 }
@@ -53,7 +53,7 @@ body {
 .slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: white;
+  background: #10b981;
   border-radius: 50%;
   cursor: pointer;
   border: none;
