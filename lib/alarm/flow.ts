@@ -4,6 +4,7 @@ export type AppState =
   | "alarming"
   | "coding"
   | "monitoring"
+  | "penalty"
   | "cleared";
 
 export type AppRoute = "/" | "/waiting" | "/challenge" | "/monitoring";
@@ -14,6 +15,7 @@ export const STATE_TO_ROUTE: Record<AppState, AppRoute> = {
   alarming: "/challenge",
   coding: "/challenge",
   monitoring: "/monitoring",
+  penalty: "/monitoring",
   cleared: "/",
 };
 
@@ -21,7 +23,7 @@ export const ROUTE_ALLOWED_STATES: Record<AppRoute, AppState[]> = {
   "/": ["idle", "cleared"],
   "/waiting": ["waiting"],
   "/challenge": ["alarming", "coding"],
-  "/monitoring": ["monitoring"],
+  "/monitoring": ["monitoring", "penalty"],
 };
 
 const ALLOWED_TRANSITIONS: Record<AppState, AppState[]> = {
@@ -29,7 +31,8 @@ const ALLOWED_TRANSITIONS: Record<AppState, AppState[]> = {
   waiting: ["alarming"],
   alarming: ["coding"],
   coding: ["monitoring"],
-  monitoring: ["cleared"],
+  monitoring: ["cleared", "penalty"],
+  penalty: ["monitoring", "cleared"],
   cleared: ["waiting"],
 };
 

@@ -2,13 +2,15 @@
 
 import { useRouter } from "next/navigation";
 
-import { useAlarmStore } from "@/stores/alarmStore";
+import { type AlarmStore, useAlarmStore } from "@/stores/alarmStore";
 
 export default function HomePage() {
   const router = useRouter();
-  const state = useAlarmStore((store) => store.state);
-  const transition = useAlarmStore((store) => store.transition);
-  const reset = useAlarmStore((store) => store.reset);
+  const state = useAlarmStore((store: AlarmStore) => store.state);
+  const isSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.isSleepDetectionOn);
+  const setSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.setSleepDetectionOn);
+  const transition = useAlarmStore((store: AlarmStore) => store.transition);
+  const reset = useAlarmStore((store: AlarmStore) => store.reset);
   const isDev = process.env.NODE_ENV !== "production";
 
   const startWaiting = () => {
@@ -31,6 +33,22 @@ export default function HomePage() {
     }
   };
 
+  const handleToggleSleepDetection = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    if (checked) {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        setSleepDetectionOn(true);
+      } catch (err) {
+        console.error("Camera permission denied:", err);
+        setSleepDetectionOn(false);
+        alert("カメラの許可が得られなかったため、二度寝検知機能をOFFにします。");
+      }
+    } else {
+      setSleepDetectionOn(false);
+    }
+  };
+
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 px-6 text-center">
       <h1 className="text-3xl font-bold">目覚ましクソコード</h1>
@@ -44,6 +62,19 @@ export default function HomePage() {
           Challenge cleared. 次の目覚ましを開始できます。
         </p>
       )}
+
+      <div className="flex items-center gap-2 mb-4">
+        <input
+          type="checkbox"
+          id="sleep-detection-toggle"
+          checked={isSleepDetectionOn}
+          onChange={handleToggleSleepDetection}
+          className="h-5 w-5 rounded border-gray-300"
+        />
+        <label htmlFor="sleep-detection-toggle" className="text-sm cursor-pointer select-none">
+          二度寝検知機能 (カメラ使用)
+        </label>
+      </div>
 
       <div className="flex gap-3">
         <button
