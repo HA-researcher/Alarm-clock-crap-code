@@ -1,5 +1,27 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Challenge Editor Setup
+
+Install Monaco dependencies:
+
+```bash
+npm install @monaco-editor/react monaco-editor
+```
+
+Challenge editor demo flow:
+
+1. Run `npm run dev`
+2. Open `/` and click `Start Alarm`
+3. On `/waiting`, click `Trigger Alarm`
+4. On `/challenge`, focus the editor to switch status to `coding`
+5. Edit code and click `提出` to print the current code to browser console
+
+Development-only shortcut:
+
+- In non-production mode, Home shows a `DEV ONLY` button:
+  `Jump to /challenge (alarming)`
+- This fast-forwards state and route for manual debugging without changing production behavior.
+
 ## Getting Started
 
 First, run the development server:
