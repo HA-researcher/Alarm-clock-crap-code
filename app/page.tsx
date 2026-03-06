@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useAlarmStore } from "@/stores/alarmStore";
+import { type AlarmStore, useAlarmStore } from "@/stores/alarmStore";
 import { AlarmSettings } from "@/types/alarm";
 import ChallengeConfig from "@/components/ChallengeConfig";
 import AlarmConfig from "@/components/AlarmConfig";
@@ -11,9 +11,11 @@ import MobileConnection from "@/components/MobileConnection";
 
 export default function HomePage() {
   const router = useRouter();
-  const state = useAlarmStore((store) => store.state);
-  const transition = useAlarmStore((store) => store.transition);
-  const reset = useAlarmStore((store) => store.reset);
+  const state = useAlarmStore((store: AlarmStore) => store.state);
+  const isSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.isSleepDetectionOn);
+  const setSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.setSleepDetectionOn);
+  const transition = useAlarmStore((store: AlarmStore) => store.transition);
+  const reset = useAlarmStore((store: AlarmStore) => store.reset);
   const isDev = process.env.NODE_ENV !== "production";
 
   // 設定状態を1つのオブジェクトにまとめる
@@ -54,6 +56,27 @@ export default function HomePage() {
     }
   };
 
+  // e.target.checked ではなく、現在の store の状態を反転させてトグルするよう変更
+  const handleToggleSleepDetection = async () => {
+    const nextState = !isSleepDetectionOn;
+    
+    if (nextState) {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        setSleepDetectionOn(true);
+        updateSetting("enableMonitoring", true);
+      } catch (err) {
+        console.error("Camera permission denied:", err);
+        setSleepDetectionOn(false);
+        updateSetting("enableMonitoring", false);
+        alert("カメラの許可が得られなかったため、二度寝検知機能をOFFにします。");
+      }
+    } else {
+      setSleepDetectionOn(false);
+      updateSetting("enableMonitoring", false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900">
       {/* メインコンテンツ */}
@@ -73,10 +96,10 @@ export default function HomePage() {
             <AlarmConfig
               alarmTime={settings.alarmTime}
               volume={settings.volume}
-              enableMonitoring={settings.enableMonitoring}
+              enableMonitoring={isSleepDetectionOn} // Zustandのステートを渡す
               onAlarmTimeChange={(value) => updateSetting("alarmTime", value)}
               onVolumeChange={(value) => updateSetting("volume", value)}
-              onMonitoringToggle={() => updateSetting("enableMonitoring", !settings.enableMonitoring)}
+              onMonitoringToggle={handleToggleSleepDetection} // カメラ権限取得処理付きのトグル関数を渡す
             />
           </div>
 
@@ -92,6 +115,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={startWaiting}
+              data-testid="home-start-alarm"
               className="bg-green-600 hover:bg-green-700 text-white py-3 px-8 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
             >
               アラーム設定を保存
@@ -100,6 +124,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={reset}
+              data-testid="home-reset"
               className="border border-gray-600 hover:bg-gray-800 py-3 px-6 rounded-lg transition-colors text-gray-300"
             >
               リセット
