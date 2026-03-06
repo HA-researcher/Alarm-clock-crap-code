@@ -11,11 +11,27 @@ import MobileConnection from "@/components/MobileConnection";
 
 export default function HomePage() {
   const router = useRouter();
+
+  // 現在の状態を取得（右側の MobileConnection に渡すために使う）
   const state = useAlarmStore((store: AlarmStore) => store.state);
+
+  // 二度寝検知のON/OFF状態を取得
   const isSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.isSleepDetectionOn);
+
+  // 二度寝検知をON/OFFする関数
   const setSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.setSleepDetectionOn);
+
+  // state を waiting / alarming などへ遷移させる関数
   const transition = useAlarmStore((store: AlarmStore) => store.transition);
+
+  // ストアを初期状態へ戻す関数
   const reset = useAlarmStore((store: AlarmStore) => store.reset);
+
+  // ★追加
+  // Home で設定したアラーム時刻を Zustand に保存するための関数
+  // waiting 画面ではこの値を読んで、カウントダウンを表示する
+  const setAlarmTime = useAlarmStore((store: AlarmStore) => store.setAlarmTime);
+
   const isDev = process.env.NODE_ENV !== "production";
 
   // 設定状態を1つのオブジェクトにまとめる
@@ -37,6 +53,21 @@ export default function HomePage() {
   };
 
   const startWaiting = () => {
+    // 追加
+    // アラーム時刻が空なら waiting に進ませない
+    // waiting 画面では alarmTime が必須なので、ここで最低限チェックする
+    if (!settings.alarmTime) {
+      alert("アラーム時刻を設定してください。");
+      return;
+    }
+
+    // 追加
+    // Home で入力された時刻を Zustand に保存する
+    // これを保存しておくことで、/waiting に遷移したあとも
+    // 設定した時刻を元にカウントダウンを開始できる
+    setAlarmTime(settings.alarmTime);
+
+    // 既存どおり、state を waiting に遷移させる
     const moved = transition("waiting");
     if (moved) {
       router.push("/waiting");
@@ -45,6 +76,13 @@ export default function HomePage() {
 
   const debugJumpToChallenge = () => {
     reset();
+
+    // 追加
+    // DEV で直接 challenge に飛ぶ場合でも、
+    // いま設定中の alarmTime を保存しておく
+    // （このPRでは waiting の動作確認にも使えるようにしておくと便利）
+    setAlarmTime(settings.alarmTime);
+
     const movedToWaiting = transition("waiting");
     if (!movedToWaiting) {
       return;
@@ -62,16 +100,22 @@ export default function HomePage() {
     
     if (nextState) {
       try {
+        // カメラ権限を事前に確認
         await navigator.mediaDevices.getUserMedia({ video: true });
+
+        // 権限が取れたら Zustand と settings の両方を ON にする
         setSleepDetectionOn(true);
         updateSetting("enableMonitoring", true);
       } catch (err) {
         console.error("Camera permission denied:", err);
+
+        // 権限拒否時は OFF に戻す
         setSleepDetectionOn(false);
         updateSetting("enableMonitoring", false);
         alert("カメラの許可が得られなかったため、二度寝検知機能をOFFにします。");
       }
     } else {
+      // OFF にする場合は Zustand と settings の両方を更新する
       setSleepDetectionOn(false);
       updateSetting("enableMonitoring", false);
     }
