@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@supabase/supabase-js": "^2.98.0",
     "monaco-editor": "^0.55.1",
     "next": "16.1.6",
     "react": "19.2.3",
