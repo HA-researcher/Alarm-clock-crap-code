@@ -2,13 +2,26 @@
 
 import { useRouter } from "next/navigation";
 
+import { useSessionContext } from "@/components/providers/SessionProvider";
+import type { SessionStatus } from "@/lib/session/types";
 import { useAlarmStore } from "@/stores/alarmStore";
+
+const MOCK_STATUS_OPTIONS: SessionStatus[] = [
+  "waiting",
+  "alarming",
+  "coding",
+  "monitoring",
+  "cleared",
+  "penalty",
+  "force_stopped",
+];
 
 export default function HomePage() {
   const router = useRouter();
   const state = useAlarmStore((store) => store.state);
   const transition = useAlarmStore((store) => store.transition);
   const reset = useAlarmStore((store) => store.reset);
+  const { roomId, snapshot, refresh, setMockStatus } = useSessionContext();
   const isDev = process.env.NODE_ENV !== "production";
 
   const startWaiting = () => {
@@ -65,16 +78,79 @@ export default function HomePage() {
       </div>
 
       {isDev && (
-        <div className="rounded border border-amber-500/60 bg-amber-100/50 px-4 py-3 text-sm">
+        <div
+          data-testid="home-dev-panel"
+          className="w-full rounded border border-amber-500/60 bg-amber-100/50 px-4 py-3 text-left text-sm"
+        >
           <p className="mb-2 font-semibold">DEV ONLY</p>
-          <button
-            type="button"
-            onClick={debugJumpToChallenge}
-            data-testid="home-debug-challenge"
-            className="rounded border border-black px-3 py-1"
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={debugJumpToChallenge}
+              data-testid="home-debug-challenge"
+              className="rounded border border-black px-3 py-1"
+            >
+              Jump to /challenge (alarming)
+            </button>
+          </div>
+
+          <div
+            data-testid="home-session-status"
+            className="mb-3 rounded border border-black/20 bg-white/60 p-3"
           >
-            Jump to /challenge (alarming)
-          </button>
+            <p>
+              roomId: <span className="font-semibold">{roomId}</span>
+            </p>
+            <p>
+              source: <span className="font-semibold">{snapshot?.source ?? "unknown"}</span>
+            </p>
+            <p>
+              connection:{" "}
+              <span className="font-semibold">{snapshot?.connection ?? "connecting"}</span>
+            </p>
+            <p>
+              db status: <span className="font-semibold">{snapshot?.status ?? "waiting"}</span>
+            </p>
+            <p>
+              updatedAt: <span className="font-semibold">{snapshot?.updatedAt ?? "-"}</span>
+            </p>
+            {snapshot?.error && (
+              <p data-testid="home-session-error" className="text-red-700">
+                error: {snapshot.error}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                void refresh();
+              }}
+              data-testid="home-session-refresh"
+              className="mt-2 rounded border border-black px-3 py-1"
+            >
+              Refresh Session Snapshot
+            </button>
+          </div>
+
+          {snapshot?.source === "mock" && setMockStatus && (
+            <div data-testid="home-mock-controls" className="rounded border border-black/20 bg-white/60 p-3">
+              <p className="mb-2 font-semibold">Mock session status controls</p>
+              <div className="flex flex-wrap gap-2">
+                {MOCK_STATUS_OPTIONS.map((statusOption) => (
+                  <button
+                    key={statusOption}
+                    type="button"
+                    data-testid={`home-mock-status-${statusOption}`}
+                    className="rounded border border-black px-2 py-1"
+                    onClick={() => {
+                      void setMockStatus(statusOption);
+                    }}
+                  >
+                    {statusOption}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </main>
