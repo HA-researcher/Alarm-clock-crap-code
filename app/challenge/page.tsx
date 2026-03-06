@@ -1,19 +1,19 @@
 "use client";
 
 import type { OnMount } from "@monaco-editor/react";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
 import { challengePrompt } from "@/lib/alarm/challengeMock";
 import { useAlarmStore } from "@/stores/alarmStore";
 
-const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
-  ssr: false,
-});
+import { HeaderBar } from "@/components/challenge/HeaderBar";
+import { DiagnosticsPanel } from "@/components/challenge/DiagnosticsPanel";
+import { AiAssistantPanel } from "@/components/challenge/AiAssistantPanel";
+import { TerminalEditor } from "@/components/challenge/TerminalEditor";
+import { SubmissionArea } from "@/components/challenge/SubmissionArea";
 
 export default function ChallengePage() {
   const router = useRouter();
-  const state = useAlarmStore((store) => store.state);
   const transition = useAlarmStore((store) => store.transition);
   const challengeCode = useAlarmStore((store) => store.challengeCode);
   const setChallengeCode = useAlarmStore((store) => store.setChallengeCode);
@@ -37,57 +37,32 @@ export default function ChallengePage() {
   return (
     <main
       data-testid="challenge-page"
-      className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 px-6 py-8"
+      className="flex h-screen w-full flex-col overflow-hidden bg-[#0a0a0a] text-[#e5e5e5] font-mono selection:bg-[#ff4d4d]/30"
     >
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold">Challenge</h1>
-        <p className="text-sm opacity-70">/challenge</p>
-        <p data-testid="challenge-status" className="text-lg">
-          Current state: <span className="font-semibold">{state}</span>
-        </p>
-      </header>
+      <HeaderBar onEmergencyStop={resetAndBackToHome} />
 
-      <section className="grid flex-1 gap-4 md:grid-cols-2">
-        <article
-          data-testid="challenge-problem"
-          className="rounded border border-black/20 p-4 whitespace-pre-wrap"
-        >
-          {challengePrompt}
-        </article>
+      <div className="mx-auto flex w-full max-w-[1920px] flex-1 gap-6 overflow-hidden p-6 text-sm">
+        {/* Left Column: AI Assistant */}
+        <section className="flex w-[350px] shrink-0 flex-col gap-6">
+          <AiAssistantPanel challengePrompt={challengePrompt} />
+        </section>
 
-        <div className="rounded border border-black/20 p-2" data-testid="challenge-editor">
-          <MonacoEditor
-            height="60vh"
-            defaultLanguage="typescript"
-            value={challengeCode}
-            onChange={(value) => setChallengeCode(value ?? "")}
-            onMount={handleEditorMount}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              automaticLayout: true,
-            }}
-          />
-        </div>
-      </section>
+        {/* Center Column: Code Editor + Submission */}
+        <section className="flex min-w-0 flex-1 flex-col gap-6 overflow-hidden">
+          <div className="flex-1 overflow-hidden pb-1">
+            <TerminalEditor
+              code={challengeCode}
+              setCode={setChallengeCode}
+              onEditorMount={handleEditorMount}
+            />
+          </div>
+          <SubmissionArea onSubmit={submitCode} />
+        </section>
 
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={submitCode}
-          data-testid="challenge-submit"
-          className="rounded bg-black px-4 py-2 text-white"
-        >
-          提出
-        </button>
-        <button
-          type="button"
-          onClick={resetAndBackToHome}
-          data-testid="challenge-reset"
-          className="rounded border border-black px-4 py-2"
-        >
-          Reset
-        </button>
+        {/* Right Column: Diagnostics */}
+        <section className="flex w-[300px] shrink-0 flex-col gap-6">
+          <DiagnosticsPanel />
+        </section>
       </div>
     </main>
   );

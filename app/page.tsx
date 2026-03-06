@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { useAlarmStore } from "@/stores/alarmStore";
+import { type AlarmStore, useAlarmStore } from "@/stores/alarmStore";
 import { AlarmSettings } from "@/types/alarm";
 import ChallengeConfig from "@/components/ChallengeConfig";
 import AlarmConfig from "@/components/AlarmConfig";
@@ -11,9 +11,11 @@ import MobileConnection from "@/components/MobileConnection";
 
 export default function HomePage() {
   const router = useRouter();
-  const state = useAlarmStore((store) => store.state);
-  const transition = useAlarmStore((store) => store.transition);
-  const reset = useAlarmStore((store) => store.reset);
+  const state = useAlarmStore((store: AlarmStore) => store.state);
+  const isSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.isSleepDetectionOn);
+  const setSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.setSleepDetectionOn);
+  const transition = useAlarmStore((store: AlarmStore) => store.transition);
+  const reset = useAlarmStore((store: AlarmStore) => store.reset);
   const isDev = process.env.NODE_ENV !== "production";
 
   // 設定状態を1つのオブジェクトにまとめる
@@ -54,6 +56,22 @@ export default function HomePage() {
     }
   };
 
+  const handleToggleSleepDetection = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    if (checked) {
+      try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        setSleepDetectionOn(true);
+      } catch (err) {
+        console.error("Camera permission denied:", err);
+        setSleepDetectionOn(false);
+        alert("カメラの許可が得られなかったため、二度寝検知機能をOFFにします。");
+      }
+    } else {
+      setSleepDetectionOn(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-900">
       {/* メインコンテンツ */}
@@ -69,7 +87,7 @@ export default function HomePage() {
               onDifficultyChange={(value) => updateSetting("difficulty", value)}
               onCustomProblemChange={(value) => updateSetting("customProblem", value)}
             />
-            
+
             <AlarmConfig
               alarmTime={settings.alarmTime}
               volume={settings.volume}
@@ -96,7 +114,7 @@ export default function HomePage() {
             >
               アラーム設定を保存
             </button>
-            
+
             <button
               type="button"
               onClick={reset}
