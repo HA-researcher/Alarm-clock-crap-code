@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Suspense } from "react";
 
+import { AppProviders } from "@/components/providers/AppProviders";
 import { RouteStateGuard } from "@/components/RouteStateGuard";
 
 import "./globals.css";
@@ -30,8 +32,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <RouteStateGuard />
-        {children}
+        <Suspense fallback={null}>
+          <AppProviders>
+            <RouteStateGuard />
+            {children}
+          </AppProviders>
+        </Suspense>
       </body>
     </html>
   );

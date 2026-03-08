@@ -22,6 +22,56 @@ Development-only shortcut:
   `Jump to /challenge (alarming)`
 - This fast-forwards state and route for manual debugging without changing production behavior.
 
+## Session Provider (Mock / Supabase)
+
+This app now includes a `SessionProvider` that monitors DB session status by `roomId`.
+Current phase is **visualization only** (it does not auto-sync into `alarmStore` state).
+
+### Backend switch
+
+Set `NEXT_PUBLIC_SESSION_BACKEND`:
+
+```bash
+# default (recommended while API/schema is not fixed)
+NEXT_PUBLIC_SESSION_BACKEND=mock
+
+# switch to Supabase realtime adapter
+NEXT_PUBLIC_SESSION_BACKEND=supabase
+```
+
+### roomId unit
+
+- Monitoring key is `roomId` from URL query.
+- Example: `http://localhost:3000/?roomId=demo-room`
+- If omitted, it falls back to `demo-room`.
+
+### Supabase adapter envs
+
+Required:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+Optional (table/column mapping for future schema changes):
+
+```bash
+NEXT_PUBLIC_SUPABASE_SESSION_SCHEMA=public
+NEXT_PUBLIC_SUPABASE_SESSION_TABLE=sessions
+NEXT_PUBLIC_SUPABASE_ROOM_ID_COLUMN=room_id
+NEXT_PUBLIC_SUPABASE_STATUS_COLUMN=status
+NEXT_PUBLIC_SUPABASE_UPDATED_AT_COLUMN=updated_at
+```
+
+### DEV panel checks
+
+In non-production, Home (`/`) shows:
+
+- DB session `source` / `connection` / `status` / `updatedAt`
+- `Refresh Session Snapshot` button
+- Mock backend only: status switch buttons (`waiting`, `alarming`, `coding`, ...)
+
 ## Getting Started
 
 First, run the development server:
