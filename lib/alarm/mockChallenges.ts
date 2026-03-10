@@ -1,3 +1,4 @@
+// モック用の課題データ型
 export interface MockChallenge {
   id: string;
   title: string;
@@ -9,25 +10,32 @@ export interface MockChallenge {
   starterCode: string;
 }
 
+// モック課題一覧
+// 今回は 1 問だけ置いておけば十分
 export const mockChallenges: MockChallenge[] = [
   {
-    id: "sort-numbers-001",
-    title: "数字配列を昇順ソートせよ",
+    id: "sort-csv-numbers-001",
+    title: "CSV文字列を数値として昇順ソートせよ",
     story:
-      "後輩ちゃんが、数字配列を昇順に並べる関数を書いたつもりですが、うまく動きません。",
+      "後輩ちゃんが CSV 文字列を数値配列に変換するところまでは実装できたのですが、昇順ソートを入れ忘れました。",
     task:
-      "submitされたコードが、numbers 配列を昇順に並べてカンマ区切り文字列で返すように修正してください。",
+      "input で受け取ったカンマ区切り文字列を数値配列へ変換し、数値として昇順に並べて、最後にカンマ区切り文字列で返してください。",
     oneShotFix:
-      "sort(compareFn) を正しく使って、数値として昇順ソートすること。",
+      "numbers を sort((a, b) => a - b) で数値として昇順ソートすること。",
     expectedBehavior: [
-      "[3,1,2] -> '1,2,3'",
-      "[10,2,1] -> '1,2,10'",
-      "元の意図がわかる読みやすいコードになっていること",
+      `"3,1,2" -> "1,2,3"`,
+      `"10,2,1" -> "1,2,10"`,
+      `"3, x, 2" -> "2,3"`,
     ],
-    language: "javascript",
-    starterCode: `export function solve(numbers) {
-  // TODO: 数字を昇順にして "1,2,3" のような文字列を返す
-  return numbers.sort().join(",");
+    language: "typescript",
+    starterCode: `export function solve(input: string): string {
+  const numbers = input
+    .split(",")
+    .map((part) => Number(part.trim()))
+    .filter((value) => Number.isFinite(value));
+
+  // TODO: numbers を昇順に並べて返してください
+  return numbers.join(",");
 }
 `,
   },

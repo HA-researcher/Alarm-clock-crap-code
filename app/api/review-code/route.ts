@@ -371,6 +371,7 @@ export async function POST(request: NextRequest) {
   try {
     const useMock = process.env.USE_MOCK_REVIEW === "true";
 
+    // モックレビューを使う前提
     if (!useMock) {
       return NextResponse.json(
         { error: "USE_MOCK_REVIEW=true にしてください。" },
@@ -382,6 +383,7 @@ export async function POST(request: NextRequest) {
     const originalCode = body.originalCode?.trim() ?? "";
     const patchedCode = body.patchedCode?.trim() ?? "";
 
+    // 必須データがなければレビューできない
     if (!originalCode || !patchedCode) {
       return NextResponse.json(
         { error: "originalCode と patchedCode は必須です。" },
@@ -389,10 +391,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 元コードから変更されたか
     const changed = originalCode !== patchedCode;
 
-    // 今回の課題用の簡易採点条件
+    // sort を使っているか
     const usesSort = /\.sort\s*\(/.test(patchedCode);
+
+    // 数値比較の comparator があるか
+    // 例: sort((a, b) => a - b)
     const usesNumericCompare =
       /sort\s*\(\s*\(\s*[a-zA-Z_]+\s*,\s*[a-zA-Z_]+\s*\)\s*=>\s*[a-zA-Z_]+\s*-\s*[a-zA-Z_]+\s*\)/.test(
         patchedCode,
@@ -401,10 +407,11 @@ export async function POST(request: NextRequest) {
         patchedCode,
       );
 
-    const returnsJoin = /\.join\s*\(\s*["'`],[\"'`]\s*\)|\.join\s*\(\s*["'`],[\"'`]?\s*\)|\.join\s*\(\s*["'`],[\"'`]\s*\)/.test(
-      patchedCode,
-    ) || /\.join\s*\(\s*["'`],[\"'`]?\s*\)/.test(patchedCode);
+    // join(",") で文字列化しているか
+    const usesJoinComma =
+      /\.join\s*\(\s*["']\s*,\s*["']\s*\)/.test(patchedCode);
 
+    // まず変更していなければ即不合格
     if (!changed) {
       return NextResponse.json({
         passed: false,
@@ -418,19 +425,20 @@ export async function POST(request: NextRequest) {
           },
         ],
         feedback:
-          "sort の比較関数を追加して、数値として昇順ソートする実装に直してください。",
+          "numbers を sort((a, b) => a - b) で昇順ソートしてください。",
       });
     }
 
-    const issues: Array<{ title: string; detail: string }> = [];
     const strengths: string[] = [];
+    const issues: Array<{ title: string; detail: string }> = [];
 
+    // 良い点と問題点を積み上げる
     if (usesSort) {
-      strengths.push("sort を使って並び替えをしようとしている点は良いです。");
+      strengths.push("sort を使って並び替え処理を入れようとしている点は良いです。");
     } else {
       issues.push({
         title: "sort 未使用",
-        detail: "並び替え処理が見つかりませんでした。",
+        detail: "numbers の並び替え処理が見つかりませんでした。",
       });
     }
 
@@ -444,8 +452,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    if (returnsJoin) {
-      strengths.push("最終的にカンマ区切り文字列へ変換できています。");
+    if (usesJoinComma) {
+      strengths.push("最後に join(',') で文字列化できています。");
     } else {
       issues.push({
         title: "出力形式不一致",
@@ -453,7 +461,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const passed = usesSort && usesNumericCompare && returnsJoin;
+    // この問題では、合格条件を明確にしておく
+    const passed = usesSort && usesNumericCompare && usesJoinComma;
+
+    // スコアは簡易計算
     const score = passed ? 90 : Math.max(25, 90 - issues.length * 25);
 
     return NextResponse.json({
@@ -466,7 +477,7 @@ export async function POST(request: NextRequest) {
       issues,
       feedback: passed
         ? "このまま monitoring に進めます。"
-        : "比較関数つきの sort と join(',') を見直してください。",
+        : "numbers を sort((a, b) => a - b) で昇順ソートし、最後に join(',') してください。",
     });
   } catch (error) {
     console.error("[review-code] mock API error:", error);
