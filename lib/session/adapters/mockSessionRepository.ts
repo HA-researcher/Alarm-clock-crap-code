@@ -1,4 +1,4 @@
-import type { SessionRepository } from "@/lib/session/repository";
+import type { RoomCreationData, SessionRepository } from "@/lib/session/repository";
 import {
   DEFAULT_SESSION_STATUS,
   type SessionSnapshot,
@@ -77,12 +77,26 @@ class MockSessionRepository implements SessionRepository {
     };
   }
 
+  async createRoom(roomId: string, _data: RoomCreationData): Promise<void> {
+    if (!roomStateMap.has(roomId)) {
+      roomStateMap.set(roomId, {
+        status: DEFAULT_SESSION_STATUS,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+    emitRoomUpdate(roomId);
+  }
+
   async setStatus(roomId: string, status: SessionStatus): Promise<void> {
     roomStateMap.set(roomId, {
       status,
       updatedAt: new Date().toISOString(),
     });
     emitRoomUpdate(roomId);
+  }
+
+  async setCurrentCode(_roomId: string, _code: string): Promise<void> {
+    // mock: no-op
   }
 }
 

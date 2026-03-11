@@ -126,8 +126,8 @@ ${bad_patterns_text}
 }
 `;
 
-        const model = ai.models.gemini15Flash;
-        const result = await model.generateContent({
+        const result = await ai.models.generateContent({
+            model: "gemini-1.5-flash",
             contents: [
                 { role: 'user', parts: [{ text: userPrompt }] }
             ],

@@ -4,13 +4,18 @@ import { useRouter } from "next/navigation";
 
 import { type AlarmStore, useAlarmStore } from "@/stores/alarmStore";
 import { useSleepDetection } from "@/components/useSleepDetection";
+import { useAlarmAudio } from "@/lib/alarm/useAlarmAudio";
 
 export default function MonitoringPage() {
   const router = useRouter();
   const state = useAlarmStore((store: AlarmStore) => store.state);
+  const volume = useAlarmStore((store: AlarmStore) => store.volume);
   const isSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.isSleepDetectionOn);
   const transition = useAlarmStore((store: AlarmStore) => store.transition);
   const reset = useAlarmStore((store: AlarmStore) => store.reset);
+
+  // penalty時にアラーム音を鳴らす
+  useAlarmAudio(state, volume);
 
   const clearChallenge = () => {
     const moved = transition("cleared");
@@ -43,8 +48,9 @@ export default function MonitoringPage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-center justify-center gap-6 px-6 text-center">
-      <h1 className="text-3xl font-bold">Monitoring</h1>
-      <p className="text-sm opacity-70">/monitoring</p>
+      <h1 className="text-3xl font-bold">
+        {state === "penalty" ? "⚠️ 二度寝検知！" : "👀 起床確認中..."}
+      </h1>
 
       {isSleepDetectionOn && (
         <div className="relative w-64 h-48 bg-black rounded-lg overflow-hidden border-2 border-slate-700 shadow-md">
@@ -57,35 +63,36 @@ export default function MonitoringPage() {
           />
           {isInitializing && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-sm">
-              Initializing AI...
+              カメラ起動中...
             </div>
           )}
         </div>
       )}
 
       {state === "penalty" && (
-        <div className="animate-pulse bg-red-500/20 border-2 border-red-500 text-red-600 font-bold px-6 py-4 rounded-xl shadow-lg mt-4 w-full max-w-sm">
+        <div className="animate-pulse bg-red-500/20 border-2 border-red-500 text-red-600 font-bold px-6 py-4 rounded-xl shadow-lg w-full max-w-sm">
           ⚠️ 起きてください！二度寝を検知しました！ ⚠️
         </div>
       )}
 
-      <p className="text-lg">
-        Current state: <span className="font-semibold">{state}</span>
-      </p>
-      <div className="flex gap-3">
+      {state === "monitoring" && (
+        <p className="text-green-400 font-semibold">起きていることを確認中... 目を開けていてください！</p>
+      )}
+
+      <div className="flex gap-3 mt-4">
         <button
           type="button"
           onClick={clearChallenge}
-          className="rounded bg-black px-4 py-2 text-white"
+          className="rounded-lg bg-green-600 hover:bg-green-700 px-6 py-3 text-white font-semibold transition-colors"
         >
-          Mark Cleared
+          ✅ 完全に起床した
         </button>
         <button
           type="button"
           onClick={backToHome}
-          className="rounded border border-black px-4 py-2"
+          className="rounded-lg border border-gray-600 hover:bg-gray-800 px-4 py-3 text-gray-300 transition-colors"
         >
-          Reset
+          リセット
         </button>
       </div>
     </main>

@@ -10,6 +10,8 @@ import AlarmConfig from "@/components/AlarmConfig";
 import MobileConnection from "@/components/MobileConnection";
 import { useSessionContext } from "@/components/providers/SessionProvider";
 import type { SessionStatus } from "@/lib/session/types";
+import { getSessionRepository } from "@/lib/session/factory";
+import { buildNextAlarmDate } from "@/lib/alarm/time";
 
 const MOCK_STATUS_OPTIONS: SessionStatus[] = [
   "waiting",
@@ -26,29 +28,16 @@ export default function HomePage() {
 
   const { roomId, snapshot, refresh, setMockStatus } = useSessionContext();
 
-  // 現在の状態を取得（右側の MobileConnection に渡すために使う）
   const state = useAlarmStore((store: AlarmStore) => store.state);
-
-  // 二度寝検知のON/OFF状態を取得
   const isSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.isSleepDetectionOn);
-
-  // 二度寝検知をON/OFFする関数
   const setSleepDetectionOn = useAlarmStore((store: AlarmStore) => store.setSleepDetectionOn);
-
-  // state を waiting / alarming などへ遷移させる関数
   const transition = useAlarmStore((store: AlarmStore) => store.transition);
-
-  // ストアを初期状態へ戻す関数
   const reset = useAlarmStore((store: AlarmStore) => store.reset);
-
-  // ★追加
-  // Home で設定したアラーム時刻を Zustand に保存するための関数
-  // waiting 画面ではこの値を読んで、カウントダウンを表示する
   const setAlarmTime = useAlarmStore((store: AlarmStore) => store.setAlarmTime);
+  const setAlarmSettings = useAlarmStore((store: AlarmStore) => store.setAlarmSettings);
 
   const isDev = process.env.NODE_ENV !== "production";
 
-  // 設定状態を1つのオブジェクトにまとめる
   const [settings, setSettings] = useState<AlarmSettings>({
     alarmTime: "07:00",
     selectedLanguage: "javascript",
@@ -58,7 +47,6 @@ export default function HomePage() {
     volume: 70,
   });
 
-  // 個別のセッター関数
   const updateSetting = <K extends keyof AlarmSettings>(
     key: K,
     value: AlarmSettings[K]
@@ -66,22 +54,39 @@ export default function HomePage() {
     setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  const startWaiting = () => {
-    // 追加
-    // アラーム時刻が空なら waiting に進ませない
-    // waiting 画面では alarmTime が必須なので、ここで最低限チェックする
+  const startWaiting = async () => {
     if (!settings.alarmTime) {
       alert("アラーム時刻を設定してください。");
       return;
     }
 
-    // 追加
-    // Home で入力された時刻を Zustand に保存する
-    // これを保存しておくことで、/waiting に遷移したあとも
-    // 設定した時刻を元にカウントダウンを開始できる
-    setAlarmTime(settings.alarmTime);
+    const newRoomId = crypto.randomUUID();
+    const targetDate = buildNextAlarmDate(settings.alarmTime);
 
-    // 既存どおり、state を waiting に遷移させる
+    // Zustand に設定を保存
+    setAlarmTime(settings.alarmTime);
+    setAlarmSettings({
+      language: settings.selectedLanguage,
+      level: settings.difficulty,
+      customProblem: settings.customProblem,
+      volume: settings.volume,
+      roomId: newRoomId,
+    });
+
+    // Supabase に room を作成
+    try {
+      await getSessionRepository().createRoom?.(newRoomId, {
+        targetTime: targetDate?.toISOString() ?? new Date().toISOString(),
+        language: settings.selectedLanguage,
+        level: settings.difficulty,
+        customLevelPrompt: settings.customProblem || undefined,
+        isSleepDetectionOn,
+      });
+    } catch (err) {
+      console.error("[startWaiting] createRoom failed:", err);
+      // room作成失敗でも待機画面には進む（standalone modeで動く）
+    }
+
     const moved = transition("waiting");
     if (moved) {
       router.push("/waiting");
@@ -90,12 +95,13 @@ export default function HomePage() {
 
   const debugJumpToChallenge = () => {
     reset();
-
-    // 追加
-    // DEV で直接 challenge に飛ぶ場合でも、
-    // いま設定中の alarmTime を保存しておく
-    // （このPRでは waiting の動作確認にも使えるようにしておくと便利）
     setAlarmTime(settings.alarmTime);
+    setAlarmSettings({
+      language: settings.selectedLanguage,
+      level: settings.difficulty,
+      customProblem: settings.customProblem,
+      volume: settings.volume,
+    });
 
     const movedToWaiting = transition("waiting");
     if (!movedToWaiting) {
@@ -108,28 +114,21 @@ export default function HomePage() {
     }
   };
 
-  // e.target.checked ではなく、現在の store の状態を反転させてトグルするよう変更
   const handleToggleSleepDetection = async () => {
     const nextState = !isSleepDetectionOn;
-    
+
     if (nextState) {
       try {
-        // カメラ権限を事前に確認
         await navigator.mediaDevices.getUserMedia({ video: true });
-
-        // 権限が取れたら Zustand と settings の両方を ON にする
         setSleepDetectionOn(true);
         updateSetting("enableMonitoring", true);
       } catch (err) {
         console.error("Camera permission denied:", err);
-
-        // 権限拒否時は OFF に戻す
         setSleepDetectionOn(false);
         updateSetting("enableMonitoring", false);
         alert("カメラの許可が得られなかったため、二度寝検知機能をOFFにします。");
       }
     } else {
-      // OFF にする場合は Zustand と settings の両方を更新する
       setSleepDetectionOn(false);
       updateSetting("enableMonitoring", false);
     }
@@ -137,10 +136,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* メインコンテンツ */}
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* 左側: アラーム設定 */}
           <div className="lg:col-span-2 space-y-6">
             <ChallengeConfig
               selectedLanguage={settings.selectedLanguage}
@@ -154,31 +151,29 @@ export default function HomePage() {
             <AlarmConfig
               alarmTime={settings.alarmTime}
               volume={settings.volume}
-              enableMonitoring={isSleepDetectionOn} // Zustandのステートを渡す
+              enableMonitoring={isSleepDetectionOn}
               onAlarmTimeChange={(value) => updateSetting("alarmTime", value)}
               onVolumeChange={(value) => updateSetting("volume", value)}
-              onMonitoringToggle={handleToggleSleepDetection} // カメラ権限取得処理付きのトグル関数を渡す
+              onMonitoringToggle={handleToggleSleepDetection}
             />
           </div>
 
-          {/* 右側: モバイル連携 */}
           <div>
             <MobileConnection state={state} />
           </div>
         </div>
 
-        {/* 操作ボタン */}
         <div className="mt-8 flex justify-center">
           <div className="flex gap-4">
             <button
               type="button"
-              onClick={startWaiting}
+              onClick={() => void startWaiting()}
               data-testid="home-start-alarm"
               className="bg-green-600 hover:bg-green-700 text-white py-3 px-8 rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg"
             >
               アラーム設定を保存
             </button>
-            
+
             <button
               type="button"
               onClick={reset}
@@ -190,7 +185,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* デバッグ用 */}
         {isDev && (
           <div
             data-testid="home-dev-panel"
@@ -225,9 +219,6 @@ export default function HomePage() {
               <p>
                 db status: <span className="font-semibold">{snapshot?.status ?? "waiting"}</span>
               </p>
-              <p>
-                updatedAt: <span className="font-semibold">{snapshot?.updatedAt ?? "-"}</span>
-              </p>
               {snapshot?.error && (
                 <p data-testid="home-session-error" className="text-red-700">
                   error: {snapshot.error}
@@ -235,9 +226,7 @@ export default function HomePage() {
               )}
               <button
                 type="button"
-                onClick={() => {
-                  void refresh();
-                }}
+                onClick={() => { void refresh(); }}
                 data-testid="home-session-refresh"
                 className="mt-2 rounded border border-black px-3 py-1 hover:bg-black/10"
               >
@@ -255,9 +244,7 @@ export default function HomePage() {
                       type="button"
                       data-testid={`home-mock-status-${statusOption}`}
                       className="rounded border border-black px-2 py-1 hover:bg-black/10"
-                      onClick={() => {
-                        void setMockStatus(statusOption);
-                      }}
+                      onClick={() => { void setMockStatus(statusOption); }}
                     >
                       {statusOption}
                     </button>
