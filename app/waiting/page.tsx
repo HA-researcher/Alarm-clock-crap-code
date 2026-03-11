@@ -84,46 +84,80 @@ export default function WaitingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-3xl mx-auto px-4 py-16">
-        <div className="rounded-2xl border border-gray-700 bg-gray-800 p-8 shadow-xl">
-          <div className="space-y-6 text-center">
-            <div>
-              <p className="text-sm text-gray-400">現在の状態</p>
-              <h1 className="mt-2 text-3xl font-bold">待機中</h1>
-            </div>
+    <div className="min-h-screen bg-gray-900">
+      {/* 緊急停止ボタン（画面右上隅） */}
+      <div className="fixed top-4 right-4 z-50">
+        <button
+          type="button"
+          onClick={handleReset}
+          className="rounded-lg border border-red-600 bg-red-900/50 px-3 py-2 text-xs text-red-400 hover:bg-red-800/70 transition-colors"
+          title="緊急停止"
+        >
+          緊急停止
+        </button>
+      </div>
 
-            <div>
-              <p className="text-sm text-gray-400">設定時刻</p>
-              <p className="mt-2 text-xl font-semibold">
-                {targetDate ? formatTargetTime(targetDate) : "未設定"}
-              </p>
-            </div>
+      <div className="flex min-h-screen items-center justify-center px-4">
+        <div className="w-full max-w-2xl">
+          <div className="rounded-2xl border border-gray-700 bg-gray-800 p-8 shadow-2xl">
+            <div className="space-y-8 text-center">
+              {/* ヘッダー */}
+              <div>
+                <p className="text-sm text-green-400 font-medium">アラーム待機中</p>
+                <h1 className="mt-2 text-4xl font-bold text-white">待機中</h1>
+              </div>
 
-            <div>
-              <p className="text-sm text-gray-400">アラームまで残り</p>
-              <p className="mt-2 text-5xl font-bold tracking-widest">
-                {formatRemainingTime(remainingMs)}
-              </p>
-            </div>
+              {/* 設定時刻 */}
+              <div>
+                <p className="text-sm text-gray-400">設定時刻</p>
+                <p className="mt-2 text-2xl font-semibold text-green-400">
+                  {targetDate ? formatTargetTime(targetDate) : "未設定"}
+                </p>
+              </div>
 
-            <p className="text-sm text-gray-400">
-              指定時刻になると challenge 画面へ移動します
-            </p>
+              {/* カウントダウン（メイン） */}
+              <div className="py-8">
+                <p className="text-sm text-gray-400 mb-4">アラームまで残り</p>
+                <p className="text-6xl md:text-7xl font-bold tracking-widest text-green-400 animate-pulse">
+                  {formatRemainingTime(remainingMs)}
+                </p>
+              </div>
 
-            <div className="rounded-lg bg-gray-900/50 p-4 text-left text-sm text-gray-400">
-              <p>store state: {state}</p>
-              <p>alarmTime: {alarmTime ?? "null"}</p>
-            </div>
+              {/* 重要注意書き */}
+              <div className="rounded-lg border border-yellow-600/30 bg-yellow-900/20 p-4">
+                <div className="flex items-center justify-center gap-2 text-yellow-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                  <span className="font-semibold">重要な注意事項</span>
+                </div>
+                <p className="mt-2 text-sm text-yellow-300 leading-relaxed">
+                  PCは電源に繋ぎ、スリープさせずに画面を開いたまま就寝してください
+                </p>
+              </div>
 
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={handleReset}
-                className="rounded-lg border border-gray-600 px-4 py-2 text-gray-300 hover:bg-gray-700"
-              >
-                Reset
-              </button>
+              {/* ステータス情報（開発用） */}
+              <div className="rounded-lg bg-gray-900/50 p-4 text-left text-xs text-gray-500 font-mono">
+                <p>state: {state}</p>
+                <p>alarmTime: {alarmTime ?? "null"}</p>
+                <p>remainingMs: {remainingMs}</p>
+              </div>
+
+              {/* フッター情報 */}
+              <div className="text-sm text-gray-500">
+                <p>指定時刻になると自動的にチャレンジ画面へ移動します</p>
+              </div>
             </div>
           </div>
         </div>
