@@ -11,6 +11,9 @@ import { useRouter } from "next/navigation";
 // React の状態管理フック
 import { useEffect, useState } from "react";
 
+import { getSessionRepository } from "@/lib/session/factory";
+import { useAlarmAudio } from "@/lib/alarm/useAlarmAudio";
+
 // 画面の部品
 import { HeaderBar } from "@/components/challenge/HeaderBar";
 import { AiAssistantPanel } from "@/components/challenge/AiAssistantPanel";
@@ -52,9 +55,19 @@ export default function ChallengePage() {
 
   // 状態をリセットする関数
   const reset = useAlarmStore((store) => store.reset);
+  const language = useAlarmStore((store) => store.language);
+  const level = useAlarmStore((store) => store.level);
+  const customProblem = useAlarmStore((store) => store.customProblem);
+  const roomId = useAlarmStore((store) => store.roomId);
+  const volume = useAlarmStore((store) => store.volume);
+  const appState = useAlarmStore((store) => store.state);
+
+  useAlarmAudio(appState, volume);
 
   // AIやモックAPIから取得した「課題全体」
   const [challenge, setChallenge] = useState<GeneratedChallenge | null>(null);
+  // フェールセーフ用
+  const [isForceStopped, setIsForceStopped] = useState(false);
 
   // 課題取得時点の「元コード」。
   // レビュー時に「提出前」と「提出後」を比較したいので保持しておく。
@@ -88,6 +101,17 @@ export default function ChallengePage() {
     editor.onDidFocusEditorText(() => {
       transition("coding");
     });
+  };
+
+  const handleEmergencyStop = () => {
+    setIsForceStopped(true);
+    if (roomId) {
+      void getSessionRepository().setStatus?.(roomId, "force_stopped");
+    }
+    setTimeout(() => {
+      reset();
+      router.push("/");
+    }, 4000);
   };
 
   // 提出処理
@@ -156,12 +180,6 @@ export default function ChallengePage() {
     }
   };
 
-  // ホームへ戻る処理
-  const resetAndBackToHome = () => {
-    reset();
-    router.push("/");
-  };
-
   // 初回表示時に課題を取得する
   useEffect(() => {
     let mounted = true;
@@ -170,7 +188,6 @@ export default function ChallengePage() {
       try {
         // 読み込み開始
         setIsLoading(true);
-
         // 課題取得前に、古い課題エラーを消す
         setChallengeError(null);
 
@@ -183,8 +200,9 @@ export default function ChallengePage() {
 
         // 課題取得APIを呼ぶ
         const result = await CodeGeneratorService.fetchCrapCode({
-          language: "javascript",
-          level: "beginner",
+          language,
+          level,
+          custom_level_prompt: customProblem || undefined,
         });
 
         // 画面がもう閉じていたら反映しない
@@ -224,7 +242,7 @@ export default function ChallengePage() {
     return () => {
       mounted = false;
     };
-  }, [setChallengeCode]);
+  }, [language, level, customProblem, roomId, setChallengeCode]);
 
   // 左の AI アシスタント欄に表示する文章
   // ここでは challengeError だけを見る
@@ -241,8 +259,21 @@ export default function ChallengePage() {
       data-testid="challenge-page"
       className="flex h-screen w-full flex-col overflow-hidden bg-[#0a0a0a] font-mono text-[#e5e5e5] selection:bg-[#ff4d4d]/30"
     >
+      {/* フェールセーフオーバーレイ */}
+      {isForceStopped && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90">
+          <div className="max-w-lg text-center p-8 rounded-xl border border-gray-700 bg-gray-900">
+            <p className="text-4xl mb-4">😅</p>
+            <p className="text-lg font-bold text-white mb-2">後輩ちゃんのクソコードは</p>
+            <p className="text-lg font-bold text-green-400 mb-4">他の人が遠隔で解決してくれたみたいです！</p>
+            <p className="text-gray-400">先輩、起こしてごめんなさい～！</p>
+            <p className="mt-4 text-sm text-gray-600">まもなくホームに戻ります...</p>
+          </div>
+        </div>
+      )}
+
       {/* 上部ヘッダー */}
-      <HeaderBar onEmergencyStop={resetAndBackToHome} />
+      <HeaderBar onEmergencyStop={handleEmergencyStop} />
 
       <div className="mx-auto flex w-full max-w-[1920px] flex-1 gap-6 overflow-hidden p-6 text-sm">
         {/* 左: 課題説明エリア
@@ -260,7 +291,6 @@ export default function ChallengePage() {
               onEditorMount={handleEditorMount}
             />
           </div>
-
           {/* 提出UI。
               ボタンを押すと submitCode() が呼ばれる */}
           <SubmissionArea onSubmit={submitCode} />
@@ -284,11 +314,10 @@ export default function ChallengePage() {
                 {/* PASS / RETRY ラベル */}
                 <div className="flex items-center gap-3">
                   <span
-                    className={`rounded-full px-3 py-1 text-xs font-bold ${
-                      reviewResult.passed
-                        ? "bg-green-500/20 text-green-300"
-                        : "bg-red-500/20 text-red-300"
-                    }`}
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${reviewResult.passed
+                      ? "bg-green-500/20 text-green-300"
+                      : "bg-red-500/20 text-red-300"
+                      }`}
                   >
                     {reviewResult.passed ? "PASS" : "RETRY"}
                   </span>

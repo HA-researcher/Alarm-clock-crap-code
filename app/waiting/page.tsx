@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
 
 import { type AlarmStore, useAlarmStore } from "@/stores/alarmStore";
 import {
@@ -24,6 +25,9 @@ export default function WaitingPage() {
 
   // Reset ボタン用
   const reset = useAlarmStore((store: AlarmStore) => store.reset);
+
+  // モバイル連携用 roomId
+  const roomId = useAlarmStore((store: AlarmStore) => store.roomId);
 
   // 画面に表示する残り時間（ミリ秒）
   const [remainingMs, setRemainingMs] = useState(0);
@@ -121,6 +125,26 @@ export default function WaitingPage() {
                 <p className="text-6xl md:text-7xl font-bold tracking-widest text-green-400 animate-pulse">
                   {formatRemainingTime(remainingMs)}
                 </p>
+              </div>
+
+              {/* モバイル連携 QRコード */}
+              <div className="border-t border-gray-700 pt-6">
+                <p className="text-sm text-gray-400 mb-3">スマホで読み込んでください</p>
+                {roomId ? (
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="bg-white p-3 rounded-lg">
+                      <QRCodeSVG
+                        value={roomId}
+                        size={160}
+                        bgColor="#ffffff"
+                        fgColor="#000000"
+                        level="M"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">セッションIDが見つかりません</p>
+                )}
               </div>
 
               {/* 重要注意書き */}
