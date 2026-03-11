@@ -31,35 +31,35 @@ const SYSTEM_PROMPT = `
 `;
 
 export async function POST(req: Request) {
-    try {
-        const ai = getGenAI();
-        const body = await req.json();
+  try {
+    const ai = getGenAI();
+    const body = await req.json();
 
-        const {
-            language,
-            level,
-            flavor = "変数名が最悪、無駄なネスト",
-            task_spec_text = "入力配列の数値を全て2倍にして返す",
-            custom_level_prompt = "",
-            perf_focus = false,
-            bad_patterns_text = "変数名を a, b, c のように意味不明にする"
-        } = body;
+    const {
+      language,
+      level,
+      flavor = "変数名が最悪、無駄なネスト",
+      task_spec_text = "入力配列の数値を全て2倍にして返す",
+      custom_level_prompt = "",
+      perf_focus = false,
+      bad_patterns_text = "変数名を a, b, c のように意味不明にする"
+    } = body;
 
-        let targetLinesMid = 15;
-        let hardMaxLines = 25;
+    let targetLinesMid = 15;
+    let hardMaxLines = 25;
 
-        if (level === "intermediate") {
-            targetLinesMid = 55;
-            hardMaxLines = 100;
-        } else if (level === "advanced") {
-            targetLinesMid = 115;
-            hardMaxLines = 150;
-        } else if (level === "custom") {
-            targetLinesMid = 90;
-            hardMaxLines = 150;
-        }
+    if (level === "intermediate") {
+      targetLinesMid = 55;
+      hardMaxLines = 100;
+    } else if (level === "advanced") {
+      targetLinesMid = 115;
+      hardMaxLines = 150;
+    } else if (level === "custom") {
+      targetLinesMid = 90;
+      hardMaxLines = 150;
+    }
 
-        const userPrompt = `
+    const userPrompt = `
 次の条件でクソコード課題を1つ生成してください。
 
 ## Parameters
@@ -126,28 +126,35 @@ ${bad_patterns_text}
 }
 `;
 
-        const model = ai.models.gemini15Flash;
-        const result = await model.generateContent({
-            contents: [
-                { role: 'user', parts: [{ text: userPrompt }] }
-            ],
-            config: {
-                systemInstruction: SYSTEM_PROMPT,
-                responseMimeType: "application/json",
-            }
-        });
+    const result = await ai.models.generateContent({
+      model: 'gemini-1.5-flash',
+      contents: [
+        { role: 'user', parts: [{ text: userPrompt }] }
+      ],
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        responseMimeType: "application/json",
+      }
+    });
 
-        if (!result.text) {
-            throw new Error("No response from Gemini");
-        }
-
-        return NextResponse.json(JSON.parse(result.text));
-
-    } catch (error) {
-        console.error("[generate-code] API Error:", error);
-        return NextResponse.json(
-            { error: "Failed to generate code from Gemini API" },
-            { status: 500 }
-        );
+    if (!result.text) {
+      throw new Error("No response from Gemini");
     }
+
+    let jsonText = result.text;
+    if (jsonText.startsWith("\`\`\`json")) {
+      jsonText = jsonText.replace(/^\`\`\`json\n?/, "").replace(/\n?\`\`\`$/, "");
+    } else if (jsonText.startsWith("\`\`\`")) {
+      jsonText = jsonText.replace(/^\`\`\`\n?/, "").replace(/\n?\`\`\`$/, "");
+    }
+
+    return NextResponse.json(JSON.parse(jsonText));
+
+  } catch (error) {
+    console.error("[generate-code] API Error:", error);
+    return NextResponse.json(
+      { error: "Failed to generate code from Gemini API" },
+      { status: 500 }
+    );
+  }
 }

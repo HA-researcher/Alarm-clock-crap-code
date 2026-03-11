@@ -3,8 +3,10 @@ export type AppState =
   | "waiting"
   | "alarming"
   | "coding"
+  | "reviewing"
   | "monitoring"
   | "penalty"
+  | "force_stopped"
   | "cleared";
 
 export type AppRoute = "/" | "/waiting" | "/challenge" | "/monitoring";
@@ -14,26 +16,30 @@ export const STATE_TO_ROUTE: Record<AppState, AppRoute> = {
   waiting: "/waiting",
   alarming: "/challenge",
   coding: "/challenge",
+  reviewing: "/challenge",
   monitoring: "/monitoring",
   penalty: "/monitoring",
+  force_stopped: "/",
   cleared: "/",
 };
 
 export const ROUTE_ALLOWED_STATES: Record<AppRoute, AppState[]> = {
-  "/": ["idle", "cleared"],
+  "/": ["idle", "cleared", "force_stopped"],
   "/waiting": ["waiting"],
-  "/challenge": ["alarming", "coding"],
+  "/challenge": ["alarming", "coding", "reviewing"],
   "/monitoring": ["monitoring", "penalty"],
 };
 
 const ALLOWED_TRANSITIONS: Record<AppState, AppState[]> = {
   idle: ["waiting"],
-  waiting: ["alarming"],
-  alarming: ["coding"],
-  coding: ["monitoring"],
-  monitoring: ["cleared", "penalty"],
-  penalty: ["monitoring", "cleared"],
-  cleared: ["waiting"],
+  waiting: ["alarming", "force_stopped"],
+  alarming: ["coding", "force_stopped"],
+  coding: ["monitoring", "reviewing", "alarming", "force_stopped"],
+  reviewing: ["cleared", "alarming", "monitoring", "force_stopped"],
+  monitoring: ["cleared", "penalty", "force_stopped"],
+  penalty: ["monitoring", "cleared", "force_stopped"],
+  cleared: ["waiting", "idle"],
+  force_stopped: ["idle"],
 };
 
 export function canTransition(from: AppState, to: AppState): boolean {
