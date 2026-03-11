@@ -98,10 +98,14 @@ function fallbackReview(
   originalCode: string,
   patchedCode: string,
 ): GeminiReviewResponse {
+  // 元コードから変更されたか
   const changed = originalCode.trim() !== patchedCode.trim();
 
-  // モック特有のハードコード検証 (昇順ソートの要件)
+  // sort を使っているか
   const usesSort = /\.sort\s*\(/.test(patchedCode);
+
+  // 数値比較の comparator があるか
+  // 例: sort((a, b) => a - b)
   const usesNumericCompare =
     /sort\s*\(\s*\(\s*[a-zA-Z_]+\s*,\s*[a-zA-Z_]+\s*\)\s*=>\s*[a-zA-Z_]+\s*-\s*[a-zA-Z_]+\s*\)/.test(
       patchedCode,
@@ -109,9 +113,12 @@ function fallbackReview(
     /sort\s*\(\s*function\s*\(\s*[a-zA-Z_]+\s*,\s*[a-zA-Z_]+\s*\)\s*\{\s*return\s+[a-zA-Z_]+\s*-\s*[a-zA-Z_]+\s*;?\s*\}\s*\)/.test(
       patchedCode,
     );
+
+  // join(",") で文字列化しているか
   const usesJoinComma =
     /\.join\s*\(\s*["']\s*,\s*["']\s*\)/.test(patchedCode);
 
+  // まず変更していなければ即不合格
   if (!changed) {
     return {
       passed: false,
@@ -132,6 +139,7 @@ function fallbackReview(
   const strengths: string[] = [];
   const issues: Array<{ title: string; detail: string }> = [];
 
+  // 良い点と問題点を積み上げる
   if (usesSort) {
     strengths.push("sort を使って並び替え処理を入れようとしている点は良いです。");
   } else {
@@ -160,15 +168,18 @@ function fallbackReview(
     });
   }
 
+  // この問題では、合格条件を明確にしておく
   const passed = usesSort && usesNumericCompare && usesJoinComma;
+
+  // スコアは簡易計算
   const score = passed ? 90 : Math.max(25, 90 - issues.length * 25);
 
   return {
     passed,
     score,
     summary: passed
-      ? "[MOCK] 要件どおり、数値の昇順ソートと文字列化ができています。"
-      : "[MOCK] いくつか要件を満たしていません。再提出してください。",
+      ? "要件どおり、数値の昇順ソートと文字列化ができています。"
+      : "いくつか要件を満たしていません。再提出してください。",
     strengths,
     issues,
     feedback: passed
@@ -291,6 +302,7 @@ export async function POST(request: NextRequest) {
     const originalCode = body.originalCode?.trim() ?? "";
     const patchedCode = body.patchedCode?.trim() ?? "";
 
+    // 必須データがなければレビューできない
     if (!originalCode || !patchedCode) {
       return NextResponse.json(
         { error: "originalCode と patchedCode は必須です。" },
@@ -298,7 +310,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const useMock = process.env.USE_MOCK_GEMINI === "true";
+    const useMock = process.env.USE_MOCK_REVIEW === "true" || process.env.USE_MOCK_GEMINI === "true";
     const apiKey = process.env.GEMINI_API_KEY;
 
     // モックが有効、もしくはAPIキーが未設定の場合はフォールバックを使う
