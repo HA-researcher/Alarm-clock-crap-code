@@ -32,7 +32,7 @@ export default function ChallengeConfig({
         <select
           value={selectedLanguage}
           onChange={(e) => onLanguageChange(e.target.value)}
-          className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 hover:border-green-400 cursor-pointer"
         >
           {PROGRAMMING_LANGUAGES.map((lang) => (
             <option key={lang.value} value={lang.value} className="bg-gray-700">
@@ -50,7 +50,7 @@ export default function ChallengeConfig({
         <select
           value={difficulty}
           onChange={(e) => onDifficultyChange(e.target.value)}
-          className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200 hover:border-green-400 cursor-pointer"
         >
           {DIFFICULTY_LEVELS.map((level) => (
             <option key={level.value} value={level.value} className="bg-gray-700">
@@ -61,8 +61,14 @@ export default function ChallengeConfig({
       </div>
 
       {/* カスタム問題 */}
-      {difficulty === "custom" && (
-        <div className="mb-4 animate-in">
+      <div 
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          difficulty === "custom" 
+            ? "max-h-40 opacity-100 mb-4" 
+            : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="pt-4">
           <label className="block text-sm font-medium text-gray-300 mb-2">
             カスタム問題
           </label>
@@ -70,10 +76,10 @@ export default function ChallengeConfig({
             value={customProblem}
             onChange={(e) => onCustomProblemChange(e.target.value)}
             placeholder="ここに問題を入力してください..."
-            className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 h-24 resize-none placeholder-gray-400"
+            className="w-full px-3 py-2 bg-gray-700 text-gray-100 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 h-24 resize-none placeholder-gray-400 transition-all duration-200 hover:border-green-400 focus:border-green-500"
           />
         </div>
-      )}
+      </div>
     </div>
   );
 }
