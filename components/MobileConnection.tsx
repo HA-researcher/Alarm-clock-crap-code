@@ -10,9 +10,6 @@ interface MobileConnectionProps {
 export default function MobileConnection({ state }: MobileConnectionProps) {
   const roomId = useAlarmStore((s) => s.roomId);
 
-  // 合言葉: roomIdの先頭6文字を大文字で表示
-  const passphrase = roomId ? roomId.replace(/-/g, "").slice(0, 6).toUpperCase() : "------";
-
   return (
     <div className="space-y-6">
       {/* Mobile Connection */}
@@ -50,17 +47,6 @@ export default function MobileConnection({ state }: MobileConnectionProps) {
           </div>
         </div>
 
-        {/* 合言葉 */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            合言葉
-          </label>
-          <div className="bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-center">
-            <span className="text-green-400 font-mono text-lg tracking-widest">
-              {passphrase}
-            </span>
-          </div>
-        </div>
       </div>
 
       {/* 状態表示 */}
