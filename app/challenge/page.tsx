@@ -174,6 +174,10 @@ export default function ChallengePage() {
 
       // レビュー失敗時は reviewError にだけ入れる
       setReviewError("AIレビューに失敗しました。もう一度提出してください。");
+
+      // ===== Day9: フェールセーフ =====
+      // エラー発生時は自動で緊急停止処理を走らせる
+      handleEmergencyStop();
     } finally {
       // 成功でも失敗でも提出中フラグは下げる
       setIsSubmitting(false);
@@ -230,6 +234,10 @@ export default function ChallengePage() {
         setChallengeError(
           "課題の取得に失敗しました。後輩ちゃんが遠隔で解決してくれたみたいです...",
         );
+
+        // ===== Day9: フェールセーフ =====
+        // エラー発生時は自動で緊急停止処理を走らせる
+        handleEmergencyStop();
       } finally {
         if (mounted) {
           setIsLoading(false);
