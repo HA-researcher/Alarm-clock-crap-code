@@ -12,6 +12,7 @@ import { useSessionContext } from "@/components/providers/SessionProvider";
 import type { SessionStatus } from "@/lib/session/types";
 import { getSessionRepository } from "@/lib/session/factory";
 import { buildNextAlarmDate } from "@/lib/alarm/time";
+import { unlockAlarmAudio } from "@/lib/alarm/audioManager";
 
 const MOCK_STATUS_OPTIONS: SessionStatus[] = [
   "waiting",
@@ -58,6 +59,16 @@ export default function HomePage() {
     if (!settings.alarmTime) {
       alert("アラーム時刻を設定してください。");
       return;
+    }
+
+    // 初回ユーザー操作に紐づけて AudioContext を resume しておく。
+    // これを先にやっておくことで、waiting → alarming に入ったときに
+    // ブラウザの自動再生制約で音が鳴らない事故を減らす。
+    try {
+      await unlockAlarmAudio();
+    } catch (error) {
+      console.error("[startWaiting] unlockAlarmAudio failed:", error);
+      // unlock に失敗しても設定保存と画面遷移は継続する
     }
 
     const newRoomId = crypto.randomUUID();
