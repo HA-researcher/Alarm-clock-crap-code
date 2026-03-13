@@ -110,7 +110,9 @@ export function useSleepDetection(onSleepDetected: () => void, onAwakeDetected: 
             active = false;
             if (intervalId !== null) clearInterval(intervalId);
             if (stream) stream.getTracks().forEach(t => t.stop());
-            if (landmarkerRef.current) landmarkerRef.current.close();
+            // MediaPipe FaceLandmarker doesn't have a close() method
+            // Just set to null for cleanup
+            landmarkerRef.current = null;
         };
     }, [onSleepDetected, onAwakeDetected]);
 
