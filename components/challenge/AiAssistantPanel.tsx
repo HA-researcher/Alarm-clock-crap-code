@@ -2,9 +2,14 @@ import { Send } from "lucide-react";
 
 interface AiAssistantPanelProps {
     challengePrompt: string;
+    timerNotifications?: Array<{
+        id: number;
+        message: string;
+        timestamp: Date;
+    }>;
 }
 
-export function AiAssistantPanel({ challengePrompt }: AiAssistantPanelProps) {
+export function AiAssistantPanel({ challengePrompt, timerNotifications = [] }: AiAssistantPanelProps) {
     return (
         <div className="flex flex-1 flex-col overflow-hidden rounded-lg border border-red-500/20 bg-[#161212]/90 font-mono text-xs shadow-[0_0_20px_rgba(0,0,0,0.5)]">
             <div className="flex items-center gap-3 border-b border-red-500/10 bg-black/40 px-5 py-4">
@@ -28,11 +33,22 @@ export function AiAssistantPanel({ challengePrompt }: AiAssistantPanelProps) {
                     </div>
                 </div>
 
+                {/* タイマー通知 */}
+                {timerNotifications.map((notification) => (
+                    <div key={notification.id} className="mt-2">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="h-6 w-6 rounded-full bg-yellow-500/20 flex items-center justify-center text-[10px] font-bold border border-yellow-500/40 text-yellow-500">⏰</div>
+                            <p className="text-[10px] tracking-wider text-yellow-500 font-bold">後輩AIちゃん <span className="text-yellow-500/50 ml-1">
+                                {new Date(notification.timestamp).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })}
+                            </span></p>
+                        </div>
+                        <div className="rounded-r-lg rounded-bl-lg border border-yellow-500/30 bg-[#2f2f0f] p-4 leading-relaxed text-yellow-100 whitespace-pre-wrap shadow-[0_0_15px_rgba(239,239,68,0.15)]">
+                            {notification.message}
+                        </div>
+                    </div>
+                ))}
 
-                <div className="inline-block rounded border border-blue-500/30 bg-blue-500/10 px-4 py-2 text-blue-400 italic">
-                    [AIが入力中...]
-                </div>
-            </div>
+                            </div>
 
             <div className="border-t border-red-500/10 p-5 bg-black/20">
                 <div className="flex items-center rounded border border-gray-800 bg-[#0d0d0d] p-1 transition-colors focus-within:border-gray-600">
