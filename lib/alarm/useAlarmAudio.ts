@@ -1,84 +1,65 @@
+// lib/alarm/useAlarmAudio.ts
+
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import type { AppState } from "@/lib/alarm/flow";
+import {
+  startAlarmAudio,
+  stopAlarmAudio,
+  updateAlarmVolume,
+} from "@/lib/alarm/audioManager";
 
-const ALARM_STATES: AppState[] = ["alarming", "penalty"];
-const PAUSE_STATES: AppState[] = ["coding", "monitoring"];
+/**
+ * どの state で鳴らすか。
+ *
+ * Issue #21 の必須要件は alarming だが、
+ * penalty でも再鳴動したい設計ならここに含めておくと自然。
+ */
+const PLAY_STATES: AppState[] = ["alarming", "penalty"];
 
-interface AlarmNodes {
-  ctx: AudioContext;
-  oscillator: OscillatorNode;
-  gainNode: GainNode;
-  intervalId: ReturnType<typeof setInterval>;
-}
+/**
+ * 明示的に止める state 群。
+ *
+ * - coding: 編集開始で一時停止
+ * - cleared: 合格後は完全停止
+ * - force_stopped: 緊急停止でも完全停止
+ * - その他の待機系 state でも音は鳴らさない
+ */
+const STOP_STATES: AppState[] = [
+  "idle",
+  "waiting",
+  "coding",
+  "monitoring",
+  "cleared",
+  "force_stopped",
+];
 
+/**
+ * アプリ state に応じて PCブラウザのアラーム音を制御する hook。
+ *
+ * 責務は薄くし、
+ * 実際の Web Audio API 操作は audioManager に寄せる。
+ */
 export function useAlarmAudio(state: AppState, volume: number) {
-  const nodesRef = useRef<AlarmNodes | null>(null);
-
-  const stopAlarm = () => {
-    if (!nodesRef.current) return;
-    const { ctx, oscillator, intervalId } = nodesRef.current;
-    clearInterval(intervalId);
-    try {
-      oscillator.stop();
-    } catch {
-      // may already be stopped
-    }
-    void ctx.close();
-    nodesRef.current = null;
-  };
-
-  const startAlarm = (vol: number) => {
-    if (nodesRef.current) return; // already running
-
-    const ctx = new AudioContext();
-    const gainNode = ctx.createGain();
-    gainNode.gain.value = (vol / 100) * 0.3;
-    gainNode.connect(ctx.destination);
-
-    let isOn = false;
-
-    const oscillator = ctx.createOscillator();
-    oscillator.type = "square";
-    oscillator.frequency.value = 880;
-    oscillator.connect(gainNode);
-    oscillator.start();
-
-    // 0.5秒ON / 0.2秒OFFでビープ音をパルス
-    const intervalId = setInterval(() => {
-      isOn = !isOn;
-      gainNode.gain.setTargetAtTime(
-        isOn ? (vol / 100) * 0.3 : 0,
-        ctx.currentTime,
-        0.01,
-      );
-    }, isOn ? 500 : 200);
-
-    nodesRef.current = { ctx, oscillator, gainNode, intervalId };
-  };
-
   useEffect(() => {
-    if (ALARM_STATES.includes(state)) {
-      startAlarm(volume);
-    } else {
-      stopAlarm();
+    if (PLAY_STATES.includes(state)) {
+      startAlarmAudio(volume);
+      return;
     }
 
-    return () => {
-      if (PAUSE_STATES.includes(state)) {
-        // coding/monitoring時は音を止めるが後でalarmingに戻れる
-        stopAlarm();
-      }
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (STOP_STATES.includes(state)) {
+      stopAlarmAudio();
+    }
   }, [state, volume]);
 
-  // コンポーネントアンマウント時にクリーンアップ
+  useEffect(() => {
+    updateAlarmVolume(volume);
+  }, [volume]);
+
   useEffect(() => {
     return () => {
-      stopAlarm();
+      stopAlarmAudio();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

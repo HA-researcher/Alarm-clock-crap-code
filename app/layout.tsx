@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AppProviders } from "@/components/providers/AppProviders";
 import { RouteStateGuard } from "@/components/RouteStateGuard";
+import { AlarmAudioController } from "@/components/AlarmAudioController";
 
 import "./globals.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
       >
         <Suspense fallback={null}>
           <AppProviders>
+            <AlarmAudioController />
             <RouteStateGuard />
             {children}
           </AppProviders>

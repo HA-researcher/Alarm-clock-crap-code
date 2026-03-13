@@ -12,7 +12,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { getSessionRepository } from "@/lib/session/factory";
-import { useAlarmAudio } from "@/lib/alarm/useAlarmAudio";
 
 // 画面の部品
 import { HeaderBar } from "@/components/challenge/HeaderBar";
@@ -59,10 +58,6 @@ export default function ChallengePage() {
   const level = useAlarmStore((store) => store.level);
   const customProblem = useAlarmStore((store) => store.customProblem);
   const roomId = useAlarmStore((store) => store.roomId);
-  const volume = useAlarmStore((store) => store.volume);
-  const appState = useAlarmStore((store) => store.state);
-
-  useAlarmAudio(appState, volume);
 
   // AIやモックAPIから取得した「課題全体」
   const [challenge, setChallenge] = useState<GeneratedChallenge | null>(null);
