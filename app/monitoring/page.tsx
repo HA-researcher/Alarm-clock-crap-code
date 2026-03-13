@@ -131,50 +131,45 @@ export default function MonitoringPage() {
     <div className="min-h-screen bg-black text-green-400 font-mono text-sm p-4">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* 左側：カメラ映像 */}
+          {/* 左側：モニタリング状態 */}
           <div className="lg:col-span-2 space-y-4">
-            {/* カメラコンテナ */}
-            <div className="relative bg-black rounded-lg overflow-hidden border border-green-500/30">
-              {/* オーバーレイ情報 */}
-              <div className="absolute top-4 left-4 z-10 text-xs space-y-1 text-green-400">
-                <div>録画 {recordingTime}</div>
-                <div>ISO 800</div>
-                <div>30 FPS</div>
-                <div>1920x1080</div>
-              </div>
-
-              {/* カメラ映像 */}
-              <div className="aspect-video relative">
-                {isSleepDetectionOn && (
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full object-cover"
-                    playsInline
-                    autoPlay
-                    muted
-                  />
-                )}
-                {isInitializing && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-green-400 text-sm">
-                    <div className="text-center">
-                      <div className="animate-pulse mb-2">■</div>
-                      <div>カメラ初期化中...</div>
-                    </div>
-                  </div>
-                )}
-              </div>
+            {/* 状態コンテナ */}
+            <div className="relative bg-black rounded-lg overflow-hidden border border-green-500/30 min-h-[400px] flex flex-col items-center justify-center">
+              {/* 非表示のカメラ映像 (睡眠検知のために必要) */}
+              <video
+                ref={videoRef}
+                className="hidden"
+                playsInline
+                autoPlay
+                muted
+              />
 
               {/* ステータス表示 */}
-              <div className="absolute bottom-4 left-4 text-xs text-green-400">
-                {state === "penalty" ? (
-                  <div className="text-red-400 animate-pulse">
-                    眼閉じ - ペナルティ発動中
+              <div className="text-center space-y-4">
+                {isInitializing ? (
+                  <div className="text-green-400 text-sm">
+                    <div className="animate-pulse mb-2 text-2xl">■</div>
+                    <div>システム初期化中...</div>
                   </div>
                 ) : (
-                  <div>
-                    開眼確認 - 監視中
-                  </div>
+                  <>
+                    <div className="text-4xl font-bold tracking-tighter">
+                      {state === "penalty" ? (
+                        <span className="text-red-500 animate-pulse">! PENALTY !</span>
+                      ) : (
+                        <span className="text-green-500">SYSTEM ACTIVE</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-green-400/70">
+                      {state === "penalty" ? "閉眼を検知しました" : "正常に監視を行っています"}
+                    </div>
+                  </>
                 )}
+              </div>
+
+              {/* 稼働時間などの簡易情報 */}
+              <div className="absolute top-4 left-4 text-[10px] text-green-500/50 uppercase tracking-widest">
+                Session Active: {recordingTime}
               </div>
             </div>
 
