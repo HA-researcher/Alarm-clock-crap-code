@@ -169,9 +169,10 @@ export default function HomePage() {
             />
           </div>
 
-          <div>
+          {/*<div>
             <MobileConnection state={state} />
           </div>
+          */}
         </div>
 
         <div className="mt-8 flex justify-center">
