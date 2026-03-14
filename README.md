@@ -1,3 +1,35 @@
+# Refactor it!! - 二度寝撲滅アラーム -
+
+## 利用方法（Web版）
+
+以下のURLからアプリを利用できます。
+https://alarm-clock-crap-code-940kpw6ph-yugoso.vercel.app/
+
+### 手順
+1. URLにアクセス
+2. 言語、難易度、アラームを設定する
+3. Start Alarm を押してアラームを開始
+4. waiting画面でアラームの作動を待つ
+5. challenge画面で表示されたコードをリファクタリング
+6. 提出ボタンでコードを送信
+7. monitoring画面から「完全に起きた」を選びアラームを完全停止
+
+
+## なぜ作ったか
+皆さんは朝、無意識にスマホのアラームを止めて
+そのまま二度寝してしまった経験はありませんか？
+
+二度寝を防ぐためには、単に音を鳴らすだけでなく
+**脳を強制的に覚醒させる作業**が必要です。
+
+そこで私たちは、エンジニアにとって最も頭を使う作業の一つである
+**「他人が書いた質の悪いコードのリファクタリング」** に着目しました。
+
+このアプリは、単なる面白アプリではなく
+- 確実に目を覚ます仕組み
+- 朝のコーディング習慣（朝活）
+この2つを実用的な形で組み合わせることを目的として開発しました。
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Challenge Editor Setup
