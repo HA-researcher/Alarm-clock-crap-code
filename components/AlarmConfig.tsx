@@ -77,7 +77,7 @@ export default function AlarmConfig({
         </p>
       </div>
 
-      {/* カメラプレビュー */}
+      {/* { カメラプレビュー }
       {enableMonitoring && (
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -87,7 +87,7 @@ export default function AlarmConfig({
             <p className="text-gray-400 text-sm">カメラプレビュー表示領域</p>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }
