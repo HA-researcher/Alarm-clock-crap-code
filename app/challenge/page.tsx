@@ -442,7 +442,7 @@ export default function ChallengePage() {
                   </p>
                 </div>
 
-                {/* 今回の追加要件: 合格時のみ表示される「二度寝検知を開始する」ボタン */}
+                {/* 今回の追加要件: 合格時のみ表示される「二度寝検知モード（アラームを止める）」ボタン */}
                 {reviewResult.passed && (
                   <div className="mt-4 flex justify-center">
                     <button
@@ -451,7 +451,7 @@ export default function ChallengePage() {
                       className="group relative flex items-center gap-3 overflow-hidden rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-4 font-bold text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all hover:scale-105 hover:from-green-500 hover:to-emerald-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
                     >
                       <div className="relative z-10 flex items-center gap-2">
-                        <span className="text-lg">二度寝検知を開始する</span>
+                        <span className="text-lg">二度寝検知モード（アラームを止める）</span>
                         <svg className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
