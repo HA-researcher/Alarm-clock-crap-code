@@ -7,10 +7,12 @@ https://alarm-clock-crap-code-940kpw6ph-yugoso.vercel.app/
 
 ### 手順
 1. URLにアクセス
-2. Start Alarm を押してアラームを開始
-3. waiting画面でアラームの茶道を待つ
-4. challenge画面で表示されたコードをリファクタリング
-5. 提出ボタンでコードを送信
+2. 言語、難易度、アラームを設定する
+3. Start Alarm を押してアラームを開始
+4. waiting画面でアラームの作動を待つ
+5. challenge画面で表示されたコードをリファクタリング
+6. 提出ボタンでコードを送信
+7. monitoring画面から「完全に起きた」を選びアラームを完全停止
 
 
 ## なぜ作ったか
