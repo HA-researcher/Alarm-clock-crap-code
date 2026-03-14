@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 import { type AlarmStore, useAlarmStore } from "@/stores/alarmStore";
 import { useSleepDetection } from "@/components/useSleepDetection";
@@ -11,6 +11,27 @@ interface SystemLog {
   timestamp: string;
   message: string;
   type: "info" | "warning" | "success" | "error";
+}
+
+// 新規: モニタリング画面の見た目用ステータス
+// active / penalty の2状態だけで管理する
+type MonitorBannerState = "active" | "penalty";
+
+// 新規: 初期ログを state 初期値として生成する関数
+// useEffect 内で同期的に addLog しないために、初期値として持たせる
+function createInitialLogs(): SystemLog[] {
+  const timestamp = new Date().toLocaleTimeString("ja-JP", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  return [
+    { timestamp, message: "システム初期化完了", type: "success" },
+    { timestamp, message: "カメラキャリブレーション完了", type: "success" },
+    { timestamp, message: "顔検知有効化", type: "info" },
+  ];
 }
 
 export default function MonitoringPage() {
@@ -25,11 +46,17 @@ export default function MonitoringPage() {
   useAlarmAudio(state, volume);
 
   // ペナルティカウンター
-  const [eyeClosedPenalty, setEyeClosedPenalty] = useState(10);
-  const [faceMissingPenalty, setFaceMissingPenalty] = useState(3);
+  // 新規: 既定値は固定値として扱い、effect 内で同期 setState しない
+  const EYE_CLOSED_PENALTY_SECONDS = 10;
+  const FACE_MISSING_PENALTY_SECONDS = 3;
+
+  // 新規: penalty に入ってからの経過秒数だけ state で持つ
+  const [penaltyElapsedSeconds, setPenaltyElapsedSeconds] = useState(0);
+  const penaltyStartedAtRef = useRef<number | null>(null);
 
   // システムログ
-  const [logs, setLogs] = useState<SystemLog[]>([]);
+  // 新規: 初期ログを state 初期値にして、effect 内の addLog 連打を除去
+  const [logs, setLogs] = useState<SystemLog[]>(() => createInitialLogs());
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   // 録画時間
@@ -37,8 +64,12 @@ export default function MonitoringPage() {
   const [sessionUser] = useState("ユーザー001");
   const [uptime] = useState("00:45:23");
 
+  // 新規: 画面中央の表示制御用 state
+  const [bannerState, setBannerState] = useState<MonitorBannerState>("active");
+  const [statusMessage, setStatusMessage] = useState("正常に監視を行っています");
+
   // ログ追加関数
-  const addLog = (message: string, type: SystemLog["type"] = "info") => {
+  const addLog = useCallback((message: string, type: SystemLog["type"] = "info") => {
     const timestamp = new Date().toLocaleTimeString("ja-JP", { 
       hour12: false, 
       hour: "2-digit", 
@@ -46,7 +77,7 @@ export default function MonitoringPage() {
       second: "2-digit" 
     });
     setLogs(prev => [...prev.slice(-19), { timestamp, message, type }]);
-  };
+  }, []);
 
   // 録画時間の更新
   useEffect(() => {
@@ -61,30 +92,46 @@ export default function MonitoringPage() {
       );
     }, 1000);
 
-    addLog("システム初期化完了", "success");
-    addLog("カメラキャリブレーション完了", "success");
-    addLog("顔検知有効化", "info");
-
     return () => clearInterval(interval);
   }, []);
 
   // ペナルティカウンターの更新
+  // 新規: effect 内で同期 setState せず、penalty 中だけ interval callback で更新する
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    
+    let interval: NodeJS.Timeout | null = null;
+
     if (state === "penalty") {
+      penaltyStartedAtRef.current = Date.now();
+      setPenaltyElapsedSeconds(0);
+
       interval = setInterval(() => {
-        setEyeClosedPenalty(prev => Math.max(0, prev - 1));
-        setFaceMissingPenalty(prev => Math.max(0, prev - 1));
+        const startedAt = penaltyStartedAtRef.current;
+        if (!startedAt) return;
+
+        const elapsedSeconds = Math.floor((Date.now() - startedAt) / 1000);
+        setPenaltyElapsedSeconds(elapsedSeconds);
       }, 1000);
     } else {
-      setEyeClosedPenalty(10);
-      setFaceMissingPenalty(3);
+      penaltyStartedAtRef.current = null;
+      setPenaltyElapsedSeconds(0);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
+  }, [state]);
+
+  // 新規: store の state と見た目表示を同期する
+  // penalty 以外は常に SYSTEM ACTIVE 表示へ戻す
+  useEffect(() => {
+    if (state === "penalty") {
+      setBannerState("penalty");
+      setStatusMessage("顔または開眼状態を確認できません");
+      return;
+    }
+
+    setBannerState("active");
+    setStatusMessage("正常に監視を行っています");
   }, [state]);
 
   // 自動スクロール
@@ -108,24 +155,46 @@ export default function MonitoringPage() {
     router.push("/");
   };
 
-  const handleSleepDetected = () => {
+  const handleSleepDetected = useCallback(() => {
     if (state !== "penalty") {
       addLog("睡眠検知 - ペナルティ発動", "error");
+      setPenaltyElapsedSeconds(0);
+      setBannerState("penalty");
+      setStatusMessage("顔または開眼状態を確認できません");
       transition("penalty");
     }
-  };
+  }, [addLog, state, transition]);
 
-  const handleAwakeDetected = () => {
+  const handleAwakeDetected = useCallback(() => {
     if (state === "penalty") {
       addLog("ユーザー覚醒確認 - ペナルティ解除", "success");
       transition("monitoring");
     }
-  };
+  }, [addLog, state, transition]);
+
+  // 新規: 顔認識復帰時のログだけ残す
+  // 画面表示は SUCCESS にせず、penalty でなければ常に SYSTEM ACTIVE を表示する
+  const handleFaceDetected = useCallback(() => {
+    if (state === "monitoring") {
+      addLog("顔認識確認 - 監視継続", "success");
+    }
+  }, [addLog, state]);
 
   const { videoRef, isInitializing } = useSleepDetection(
     handleSleepDetected,
-    handleAwakeDetected
+    handleAwakeDetected,
+    handleFaceDetected,
+    isSleepDetectionOn
   );
+
+  // 新規: penalty 中だけカウントダウン表示にし、それ以外は既定値を表示する
+  const eyeClosedPenalty = state === "penalty"
+    ? Math.max(0, EYE_CLOSED_PENALTY_SECONDS - penaltyElapsedSeconds)
+    : EYE_CLOSED_PENALTY_SECONDS;
+
+  const faceMissingPenalty = state === "penalty"
+    ? Math.max(0, FACE_MISSING_PENALTY_SECONDS - penaltyElapsedSeconds)
+    : FACE_MISSING_PENALTY_SECONDS;
 
   return (
     <div className="min-h-screen bg-black text-green-400 font-mono text-sm p-4">
@@ -154,14 +223,14 @@ export default function MonitoringPage() {
                 ) : (
                   <>
                     <div className="text-4xl font-bold tracking-tighter">
-                      {state === "penalty" ? (
+                      {bannerState === "penalty" ? (
                         <span className="text-red-500 animate-pulse">! PENALTY !</span>
                       ) : (
                         <span className="text-green-500">SYSTEM ACTIVE</span>
                       )}
                     </div>
                     <div className="text-sm text-green-400/70">
-                      {state === "penalty" ? "閉眼を検知しました" : "正常に監視を行っています"}
+                      {statusMessage}
                     </div>
                   </>
                 )}
@@ -198,13 +267,22 @@ export default function MonitoringPage() {
             </div>
 
             {/* コントロールボタン */}
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-4">
               <button
                 type="button"
                 onClick={clearChallenge}
                 className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 border border-green-500"
               >
                 完全に起きた
+              </button>
+
+              {/* 新規: 既存の backToHome が未使用にならないよう、ホームへ戻る導線を追加 */}
+              <button
+                type="button"
+                onClick={backToHome}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold transition-all transform hover:scale-105 border border-gray-500"
+              >
+                ホームに戻る
               </button>
             </div>
           </div>
@@ -239,6 +317,7 @@ export default function MonitoringPage() {
               <div className="text-xs space-y-1">
                 <div>セッションユーザー: {sessionUser}</div>
                 <div>稼働時間: {uptime}</div>
+                <div>睡眠検知: {isSleepDetectionOn ? "有効" : "無効"}</div>
                 <div>ステータス: 
                   <span className={`ml-2 ${
                     state === "penalty" ? "text-red-400" : "text-green-400"
