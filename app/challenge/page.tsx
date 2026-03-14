@@ -91,6 +91,19 @@ export default function ChallengePage() {
     null,
   );
 
+  // 残り時間のstate（10分 = 600秒）
+  const [timeRemaining, setTimeRemaining] = useState(600);
+
+  // タイマー通知のstate
+  const [timerNotifications, setTimerNotifications] = useState<Array<{
+    id: number;
+    message: string;
+    timestamp: Date;
+  }>>([]);
+
+  // 通知済み時間を記録
+  const [notifiedTimes, setNotifiedTimes] = useState<Set<number>>(new Set());
+
   // エディタにフォーカスしたら coding 状態へ移行する
   const handleEditorMount: OnMount = (editor) => {
     editor.onDidFocusEditorText(() => {
@@ -247,6 +260,46 @@ export default function ChallengePage() {
     };
   }, [language, level, customProblem, roomId, setChallengeCode]);
 
+  // タイマー処理（1秒ごとにカウントダウン）
+  useEffect(() => {
+    if (timeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          // 時間切れ時の処理
+          handleEmergencyStop();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeRemaining]);
+
+  // タイマー通知監視用useEffect
+  useEffect(() => {
+    const checkTimes = [300, 180, 60]; // 5分, 3分, 1分（秒）
+    
+    if (checkTimes.includes(timeRemaining) && !notifiedTimes.has(timeRemaining)) {
+      const messages = {
+        300: "先輩！残り5分です！焦ってきますよ！",
+        180: "先輩！残り3分！そろそろ本気出します！",
+        60: "先輩！残り1分です！ヤバいですよ！"
+      };
+      
+      const newNotification = {
+        id: Date.now(),
+        message: messages[timeRemaining as keyof typeof messages],
+        timestamp: new Date()
+      };
+      
+      setTimerNotifications(prev => [...prev, newNotification]);
+      setNotifiedTimes(prev => new Set(prev).add(timeRemaining));
+    }
+  }, [timeRemaining, notifiedTimes]);
+
   // 左の AI アシスタント欄に表示する文章
   // ここでは challengeError だけを見る
   const aiPromptText = isLoading
@@ -276,13 +329,13 @@ export default function ChallengePage() {
       )}
 
       {/* 上部ヘッダー */}
-      <HeaderBar onEmergencyStop={handleEmergencyStop} />
+      <HeaderBar onEmergencyStop={handleEmergencyStop} timeRemaining={timeRemaining} />
 
       <div className="mx-auto flex w-full max-w-[1920px] flex-1 gap-6 overflow-hidden p-6 text-sm">
         {/* 左: 課題説明エリア
             課題取得失敗時は、ここに challengeError が表示される */}
         <section className="flex w-[350px] shrink-0 flex-col gap-6">
-          <AiAssistantPanel challengePrompt={aiPromptText} />
+          <AiAssistantPanel challengePrompt={aiPromptText} timerNotifications={timerNotifications} />
         </section>
 
         {/* 中央: コード編集 + 提出 + AIレビュー結果 */}
